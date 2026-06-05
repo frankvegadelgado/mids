@@ -9,7 +9,7 @@ from . import approx
 
 
 def _degree_four_auxiliary_graph(component_graph):
-    """Build the sequential degree-four auxiliary graph used by Iris."""
+    """Build the sequential degree-four auxiliary graph used by Siriaisa."""
     auxiliary = component_graph.copy()
 
     for u in component_graph.nodes():
@@ -38,7 +38,7 @@ def _degree_four_auxiliary_graph(component_graph):
 
 
 def _find_component_solution(component_graph):
-    """Return the smallest verified Iris candidate for one connected component."""
+    """Return the smallest verified Siriaisa candidate for one connected component."""
     auxiliary = _degree_four_auxiliary_graph(component_graph)
     auxiliary_solution = approx.mids_lp(auxiliary).independent_dominating_set
 

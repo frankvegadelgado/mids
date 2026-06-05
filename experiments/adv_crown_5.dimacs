@@ -1,5 +1,5 @@
 c Crown graph on 10 vertices
-c adversarial MIDS test instance generated for Iris experiments
+c adversarial MIDS test instance generated for Siriaisa experiments
 p edge 10 20
 e 1 7
 e 1 8

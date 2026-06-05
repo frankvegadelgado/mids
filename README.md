@@ -1,8 +1,8 @@
-# Iris: Approximate Independent Dominating Set Solver
+# Siriaisa: Approximate Independent Dominating Set Solver
 
-![To my mother who I love.](docs/iris.jpg)
+![To my mother who I love.](docs/siriaisa.jpg)
 
-This work builds upon [A 3-Approximation for Independent Dominating Sets: The Iris Algorithm](https://github.com/frankvegadelgado/mids).
+This work builds upon [A 3-Approximation for Independent Dominating Sets: The Siriaisa Algorithm](https://github.com/frankvegadelgado/mids).
 
 ---
 
@@ -119,7 +119,7 @@ Independent Dominating Set Found `1, 4`: Nodes `1` and `4` constitute an optimal
 ## Installation
 
 ```bash
-pip install mids
+pip install siriaisa
 ```
 
 ## Execution
@@ -134,10 +134,10 @@ pip install mids
 2. Run the script:
 
    ```bash
-   mid -i ./benchmarks/testMatrix1
+   iris -i ./benchmarks/testMatrix1
    ```
 
-   utilizing the `mid` command provided by Iris's Library to execute the Boolean adjacency matrix `mids\benchmarks\testMatrix1`. The file `testMatrix1` represents the example described herein. We also support `.xz`, `.lzma`, `.bz2`, and `.bzip2` compressed text files.
+   utilizing the `iris` command provided by Siriaisa's library to execute the Boolean adjacency matrix `mids\benchmarks\testMatrix1`. The file `testMatrix1` represents the example described herein. We also support `.xz`, `.lzma`, `.bz2`, and `.bzip2` compressed text files.
 
    **Example Output:**
 
@@ -154,7 +154,7 @@ pip install mids
 Use the `-c` flag to count the nodes in the Independent Dominating Set:
 
 ```bash
-mid -i ./benchmarks/testMatrix2 -c
+iris -i ./benchmarks/testMatrix2 -c
 ```
 
 **Output:**
@@ -170,13 +170,13 @@ testMatrix2: Independent Dominating Set Size 2
 Display help and options:
 
 ```bash
-mid -h
+iris -h
 ```
 
 **Output:**
 
 ```bash
-usage: mid [-h] -i INPUTFILE [-a] [-b] [-c] [-v] [-l] [--version]
+usage: iris [-h] -i INPUTFILE [-a] [-b] [-c] [-v] [-l] [--version]
 
 Solve the Approximate Independent Dominating Set for undirected graph encoded in DIMACS format.
 
@@ -198,16 +198,16 @@ options:
 
 Batch execution allows you to solve multiple graphs within a directory consecutively.
 
-To view available command-line options for the `batch_mid` command, use the following in your terminal or command prompt:
+To view available command-line options for the `batch_iris` command, use the following in your terminal or command prompt:
 
 ```bash
-batch_mid -h
+batch_iris -h
 ```
 
 This will display the following help information:
 
 ```bash
-usage: batch_mid [-h] -i INPUTDIRECTORY [-a] [-b] [-c] [-v] [-l] [--version]
+usage: batch_iris [-h] -i INPUTDIRECTORY [-a] [-b] [-c] [-v] [-l] [--version]
 
 Solve the Approximate Independent Dominating Set for all undirected graphs encoded in DIMACS format and stored in a directory.
 
@@ -227,12 +227,12 @@ options:
 
 # Testing Application
 
-A command-line utility named `test_mid` is provided for evaluating the Algorithm using randomly generated, large sparse matrices. It supports the following options:
+A command-line utility named `test_iris` is provided for evaluating the Algorithm using randomly generated, large sparse matrices. It supports the following options:
 
 ```bash
-usage: test_mid [-h] -d DIMENSION [-n NUM_TESTS] [-s SPARSITY] [-a] [-b] [-c] [-w] [-v] [-l] [--version]
+usage: test_iris [-h] -d DIMENSION [-n NUM_TESTS] [-s SPARSITY] [-a] [-b] [-c] [-w] [-v] [-l] [--version]
 
-The Iris Testing Application using randomly generated, large sparse matrices.
+The Siriaisa Testing Application using randomly generated, large sparse matrices.
 
 options:
   -h, --help            show this help message and exit
@@ -262,7 +262,7 @@ options:
 # Complexity
 
 ```diff
-+ Iris separates feasibility from the approximation certificate: every returned set is verified as independent and dominating, while a universal proof of the 3-approximation certificate would imply P = NP by known MIDS inapproximability results.
++ Siriaisa separates feasibility from the approximation certificate: every returned set is verified as independent and dominating, while a universal proof of the 3-approximation certificate would imply P = NP by known MIDS inapproximability results.
 ```
 
 ---

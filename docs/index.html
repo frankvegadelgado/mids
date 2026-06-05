@@ -1,6 +1,6 @@
 <html>
   <head>
-    <title>IRIS</title>
+    <title>SIRIAISA</title>
     <style>
       body {
         background-color: black;
@@ -32,9 +32,9 @@
     ></script>
   </head>
 <body>
-<h1>Iris: Approximate Independent Dominating Set Solver</h1>
-<p><img src="iris.jpg" alt="To my mother who I love."></p>
-<p>This work builds upon <a href="https://github.com/frankvegadelgado/mids">A 3-Approximation for Independent Dominating Sets: The Iris Algorithm</a>.</p>
+<h1>Siriaisa: Approximate Independent Dominating Set Solver</h1>
+<p><img src="siriaisa.jpg" alt="To my mother who I love."></p>
+<p>This work builds upon <a href="https://github.com/frankvegadelgado/mids">A 3-Approximation for Independent Dominating Sets: The Siriaisa Algorithm</a>.</p>
 <hr>
 <h1>Overview of the Minimum Independent Dominating Set (MIDS)</h1>
 <h2>Definition:</h2>
@@ -188,7 +188,7 @@ e 3 5
 <li>Python &gt;= 3.12</li>
 </ul>
 <h2>Installation</h2>
-<pre><code class="language-bash">pip install mids
+<pre><code class="language-bash">pip install siriaisa
 </code></pre>
 <h2>Execution</h2>
 <ol>
@@ -200,9 +200,9 @@ cd mids
 </li>
 <li>
 <p>Run the script:</p>
-<pre><code class="language-bash">mid -i ./benchmarks/testMatrix1
+<pre><code class="language-bash">iris -i ./benchmarks/testMatrix1
 </code></pre>
-<p>utilizing the <code>mid</code> command provided by Iris's Library to execute the Boolean adjacency matrix <code>mids\benchmarks\testMatrix1</code>. The file <code>testMatrix1</code> represents the example described herein. We also support <code>.xz</code>, <code>.lzma</code>, <code>.bz2</code>, and <code>.bzip2</code> compressed text files.</p>
+<p>utilizing the <code>iris</code> command provided by Siriaisa's library to execute the Boolean adjacency matrix <code>mids\benchmarks\testMatrix1</code>. The file <code>testMatrix1</code> represents the example described herein. We also support <code>.xz</code>, <code>.lzma</code>, <code>.bz2</code>, and <code>.bzip2</code> compressed text files.</p>
 <p><strong>Example Output:</strong></p>
 <pre><code>testMatrix1: Independent Dominating Set Found 1, 4
 </code></pre>
@@ -212,7 +212,7 @@ cd mids
 <hr>
 <h2>Independent Dominating Set Size</h2>
 <p>Use the <code>-c</code> flag to count the nodes in the Independent Dominating Set:</p>
-<pre><code class="language-bash">mid -i ./benchmarks/testMatrix2 -c
+<pre><code class="language-bash">iris -i ./benchmarks/testMatrix2 -c
 </code></pre>
 <p><strong>Output:</strong></p>
 <pre><code>testMatrix2: Independent Dominating Set Size 2
@@ -220,10 +220,10 @@ cd mids
 <hr>
 <h1>Command Options</h1>
 <p>Display help and options:</p>
-<pre><code class="language-bash">mid -h
+<pre><code class="language-bash">iris -h
 </code></pre>
 <p><strong>Output:</strong></p>
-<pre><code class="language-bash">usage: mid [-h] -i INPUTFILE [-a] [-b] [-c] [-v] [-l] [--version]
+<pre><code class="language-bash">usage: iris [-h] -i INPUTFILE [-a] [-b] [-c] [-v] [-l] [--version]
 
 Solve the Approximate Independent Dominating Set for undirected graph encoded in DIMACS format.
 
@@ -241,11 +241,11 @@ options:
 <hr>
 <h1>Batch Execution</h1>
 <p>Batch execution allows you to solve multiple graphs within a directory consecutively.</p>
-<p>To view available command-line options for the <code>batch_mid</code> command, use the following in your terminal or command prompt:</p>
-<pre><code class="language-bash">batch_mid -h
+<p>To view available command-line options for the <code>batch_iris</code> command, use the following in your terminal or command prompt:</p>
+<pre><code class="language-bash">batch_iris -h
 </code></pre>
 <p>This will display the following help information:</p>
-<pre><code class="language-bash">usage: batch_mid [-h] -i INPUTDIRECTORY [-a] [-b] [-c] [-v] [-l] [--version]
+<pre><code class="language-bash">usage: batch_iris [-h] -i INPUTDIRECTORY [-a] [-b] [-c] [-v] [-l] [--version]
 
 Solve the Approximate Independent Dominating Set for all undirected graphs encoded in DIMACS format and stored in a directory.
 
@@ -262,10 +262,10 @@ options:
 </code></pre>
 <hr>
 <h1>Testing Application</h1>
-<p>A command-line utility named <code>test_mid</code> is provided for evaluating the Algorithm using randomly generated, large sparse matrices. It supports the following options:</p>
-<pre><code class="language-bash">usage: test_mid [-h] -d DIMENSION [-n NUM_TESTS] [-s SPARSITY] [-a] [-b] [-c] [-w] [-v] [-l] [--version]
+<p>A command-line utility named <code>test_iris</code> is provided for evaluating the Algorithm using randomly generated, large sparse matrices. It supports the following options:</p>
+<pre><code class="language-bash">usage: test_iris [-h] -d DIMENSION [-n NUM_TESTS] [-s SPARSITY] [-a] [-b] [-c] [-w] [-v] [-l] [--version]
 
-The Iris Testing Application using randomly generated, large sparse matrices.
+The Siriaisa Testing Application using randomly generated, large sparse matrices.
 
 options:
   -h, --help            show this help message and exit
@@ -290,7 +290,7 @@ options:
 </ul>
 <hr>
 <h1>Complexity</h1>
-<pre><code class="language-diff">+ Iris separates feasibility from the approximation certificate: every returned set is verified as independent and dominating, while a universal proof of the 3-approximation certificate would imply P = NP by known MIDS inapproximability results.
+<pre><code class="language-diff">+ Siriaisa separates feasibility from the approximation certificate: every returned set is verified as independent and dominating, while a universal proof of the 3-approximation certificate would imply P = NP by known MIDS inapproximability results.
 </code></pre>
 <hr>
 <h1>License</h1>

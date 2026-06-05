@@ -4,7 +4,7 @@ import setuptools
 
 VERSION = "0.0.1"
 
-NAME = "mids"
+NAME = "siriaisa"
 
 INSTALL_REQUIRES = [
     "numpy>=2.2.1",
@@ -40,14 +40,14 @@ setuptools.setup(
     python_requires=">=3.12",
     # Requirements
     install_requires=INSTALL_REQUIRES,
-    packages=["mids"],
+    packages=["siriaisa"],
     long_description=Path("README.md").read_text(),
     long_description_content_type="text/markdown",
     entry_points={
         'console_scripts': [
-            'mid = mids.app:main',
-            'test_mid = mids.test:main',
-            'batch_mid = mids.batch:main'
+            'iris = siriaisa.app:main',
+            'test_iris = siriaisa.test:main',
+            'batch_iris = siriaisa.batch:main'
         ]
     }
 )

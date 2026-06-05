@@ -1,4 +1,4 @@
-"""Run Iris against exact SciPy MILP on the adversarial DIMACS suite."""
+"""Run Siriaisa against exact SciPy MILP on the adversarial DIMACS suite."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from scipy.optimize import Bounds, LinearConstraint, milp
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from mids import algorithm, parser
+from siriaisa import algorithm, parser
 
 
 def exact_mids_milp(graph: nx.Graph) -> tuple[set[int], float]:
@@ -66,17 +66,17 @@ def main() -> None:
         delta = max(dict(graph.degree()).values()) if graph.number_of_nodes() else 0
 
         start = time.perf_counter()
-        iris = algorithm.find_independent_dominating_set(graph)
-        iris_ms = (time.perf_counter() - start) * 1000.0
-        if not algorithm.verify_independent_dominating_set(graph, iris):
-            raise RuntimeError(f"Iris solution failed verification on {path.name}")
+        siriaisa = algorithm.find_independent_dominating_set(graph)
+        siriaisa_ms = (time.perf_counter() - start) * 1000.0
+        if not algorithm.verify_independent_dominating_set(graph, siriaisa):
+            raise RuntimeError(f"Siriaisa solution failed verification on {path.name}")
 
         optimum, milp_ms = exact_mids_milp(graph)
-        ratio = len(iris) / len(optimum)
+        ratio = len(siriaisa) / len(optimum)
         print(
             f"{path.name}: n={graph.number_of_nodes()} m={graph.number_of_edges()} "
-            f"Delta={delta} Iris={len(iris)} Opt={len(optimum)} "
-            f"ratio={ratio:.3f} Iris_ms={iris_ms:.3f} MILP_ms={milp_ms:.3f}"
+            f"Delta={delta} Siriaisa={len(siriaisa)} Opt={len(optimum)} "
+            f"ratio={ratio:.3f} Siriaisa_ms={siriaisa_ms:.3f} MILP_ms={milp_ms:.3f}"
         )
 
 

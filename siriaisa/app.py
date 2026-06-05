@@ -55,28 +55,28 @@ def approximate_solution(inputFile, verbose=False, log=False, count=False, brute
         output = f"{filename}: (Brute Force) {answer}"
         utils.println(output, logger, log)
         
-    logger.info("Iris solution started")
+    logger.info("Siriaisa solution started")
     started = time.time()
     
     novel_result = algorithm.find_independent_dominating_set(graph)
 
-    logger.info(f"Iris solution done in: {(time.time() - started) * 1000.0} milliseconds")
+    logger.info(f"Siriaisa solution done in: {(time.time() - started) * 1000.0} milliseconds")
 
     answer = utils.string_result_format(novel_result, count)
     output = f"{filename}: {answer}"
     utils.println(output, logger, log)
     if novel_result and (bruteForce or approximation):
         if bruteForce: 
-            output = f"Exact Ratio (Iris/Optimal): {len(novel_result)/len(brute_force_result)}"
+            output = f"Exact Ratio (Siriaisa/Optimal): {len(novel_result)/len(brute_force_result)}"
         elif approximation:
             max_degree = max(dict(graph.degree()).values())
-            output = f"Upper Bound for Ratio (Iris/Optimal): {0.5 * (max_degree + 1) * len(novel_result)/len(approximate_result)}"
+            output = f"Upper Bound for Ratio (Siriaisa/Optimal): {0.5 * (max_degree + 1) * len(novel_result)/len(approximate_result)}"
         utils.println(output, logger, log)
           
 def main():
     
     # Define the parameters
-    helper = argparse.ArgumentParser(prog="mid", description='Solve the Approximate Independent Dominating Set for undirected graph encoded in DIMACS format.')
+    helper = argparse.ArgumentParser(prog="iris", description='Solve the Approximate Independent Dominating Set for undirected graph encoded in DIMACS format.')
     helper.add_argument('-i', '--inputFile', type=str, help='input file path', required=True)
     helper.add_argument('-a', '--approximation', action='store_true', help='enable comparison with a polynomial-time approximation approach within a maximum degree factor')
     helper.add_argument('-b', '--bruteForce', action='store_true', help='enable comparison with the exponential-time brute-force approach')

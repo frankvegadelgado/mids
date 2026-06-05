@@ -1,5 +1,5 @@
 c Complete bipartite K4,4
-c adversarial MIDS test instance generated for Iris experiments
+c adversarial MIDS test instance generated for Siriaisa experiments
 p edge 8 16
 e 1 5
 e 1 6

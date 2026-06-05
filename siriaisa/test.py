@@ -24,7 +24,7 @@ def restricted_float(x):
 def main():
     
     # Define the parameters
-    helper = argparse.ArgumentParser(prog="test_mid", description="The Iris Testing Application using randomly generated, large sparse matrices.")
+    helper = argparse.ArgumentParser(prog="test_iris", description="The Siriaisa Testing Application using randomly generated, large sparse matrices.")
     helper.add_argument('-d', '--dimension', type=int, help="an integer specifying the dimensions of the square matrices", required=True)
     helper.add_argument('-n', '--num_tests', type=int, default=5, help="an integer specifying the number of tests to run")
     helper.add_argument('-s', '--sparsity', type=restricted_float, default=0.95, help="sparsity of the matrices (0.0 for dense, close to 1.0 for very sparse)")
@@ -86,23 +86,23 @@ def main():
             utils.println(output, logger, args.log)
         
 
-        logger.info("Iris solution started")
+        logger.info("Siriaisa solution started")
         started = time.time()
         
         novel_result = algorithm.find_independent_dominating_set(graph)
 
-        logger.info(f"Iris solution done in: {(time.time() - started) * 1000.0} milliseconds")
+        logger.info(f"Siriaisa solution done in: {(time.time() - started) * 1000.0} milliseconds")
 
         answer = utils.string_result_format(novel_result, count)
-        output = f"{i + 1}-Iris Test: {answer}" 
+        output = f"{i + 1}-Siriaisa Test: {answer}" 
         utils.println(output, logger, args.log)
 
         if novel_result and (bruteForce or approximation):
             if bruteForce:    
-                output = f"Exact Ratio (Iris/Optimal): {len(novel_result)/len(brute_force_result)}"
+                output = f"Exact Ratio (Siriaisa/Optimal): {len(novel_result)/len(brute_force_result)}"
             elif approximation:
                 max_degree = max(dict(graph.degree()).values())
-                output = f"Upper Bound for Ratio (Iris/Optimal): {0.5 * (max_degree + 1) * len(novel_result)/len(approximate_result)}"
+                output = f"Upper Bound for Ratio (Siriaisa/Optimal): {0.5 * (max_degree + 1) * len(novel_result)/len(approximate_result)}"
             utils.println(output, logger, args.log)
         
 
