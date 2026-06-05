@@ -1,0 +1,15 @@
+c Cycle C12
+c adversarial MIDS test instance generated for Iris experiments
+p edge 12 12
+e 1 2
+e 1 12
+e 2 3
+e 3 4
+e 4 5
+e 5 6
+e 6 7
+e 7 8
+e 8 9
+e 9 10
+e 10 11
+e 11 12

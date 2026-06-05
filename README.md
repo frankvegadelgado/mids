@@ -114,7 +114,7 @@ Independent Dominating Set Found `1, 4`: Nodes `1` and `4` constitute an optimal
 
 ## Prerequisites
 
-- Python ≥ 3.12
+- Python >= 3.12
 
 ## Installation
 
@@ -187,7 +187,7 @@ options:
   -a, --approximation   enable comparison with a polynomial-time approximation approach within a maximum degree factor
   -b, --bruteForce      enable comparison with the exponential-time brute-force approach
   -c, --count           calculate the size of the Independent Dominating Set
-  -v, --verbose         anable verbose output
+  -v, --verbose         enable verbose output
   -l, --log             enable file logging
   --version             show program's version number and exit
 ```
@@ -218,7 +218,7 @@ options:
   -a, --approximation   enable comparison with a polynomial-time approximation approach within a maximum degree factor
   -b, --bruteForce      enable comparison with the exponential-time brute-force approach
   -c, --count           calculate the size of the Independent Dominating Set
-  -v, --verbose         anable verbose output
+  -v, --verbose         enable verbose output
   -l, --log             enable file logging
   --version             show program's version number and exit
 ```
@@ -246,7 +246,7 @@ options:
   -b, --bruteForce      enable comparison with the exponential-time brute-force approach
   -c, --count           calculate the size of the Independent Dominating Set
   -w, --write           write the generated random matrix to a file in the current directory
-  -v, --verbose         anable verbose output
+  -v, --verbose         enable verbose output
   -l, --log             enable file logging
   --version             show program's version number and exit
 ```
@@ -262,7 +262,7 @@ options:
 # Complexity
 
 ```diff
-+ We present a polynomial-time algorithm achieving a 3-approximation ratio for MIDS, providing strong evidence that P = NP by efficiently solving a computationally hard problem with near-optimal solutions.
++ Iris separates feasibility from the approximation certificate: every returned set is verified as independent and dominating, while a universal proof of the 3-approximation certificate would imply P = NP by known MIDS inapproximability results.
 ```
 
 ---

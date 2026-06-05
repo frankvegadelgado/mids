@@ -19,12 +19,13 @@ LP relaxation (MIDS-LP):
         0 <= x_v <= 1
 """
 
+import time
+from dataclasses import dataclass
+from typing import Set
+
 import networkx as nx
 import numpy as np
 from scipy.optimize import linprog
-from dataclasses import dataclass, field
-from typing import Set, Optional
-import time
 
 
 # ---------------------------------------------------------------------------
@@ -126,7 +127,7 @@ def mids_lp(G: nx.Graph) -> MIDSResult:
     x, lp_obj, lp_ok = solve_mids_lp(G)
     lp_time = time.perf_counter() - t0
 
-    # Step 2: Priority order — nodes with higher fractional x_v go first
+    # Step 2: Priority order; nodes with higher fractional x_v go first
     # (LP "votes" them into the solution; greedy respects that preference)
     idx = {v: i for i, v in enumerate(nodes)}
     priority_order = sorted(nodes, key=lambda v: -x[idx[v]])
@@ -291,7 +292,7 @@ def run_tests():
         f"{'Graph':<{col['name']}} "
         f"{'n':>{col['n']}} "
         f"{'m':>{col['m']}} "
-        f"{'Δ':>{col['delta']}} "
+        f"{'Delta':>{col['delta']}} "
         f"{'LP lb':>{col['lp_lb']}} "
         f"{'LP sz':>{col['lp_sz']}} "
         f"{'GR sz':>{col['gr_sz']}} "
@@ -302,7 +303,7 @@ def run_tests():
     )
     sep = "-" * len(hdr)
     print(sep)
-    print("  LP-Guided vs Greedy Baseline — Unweighted MIDS Approximation")
+    print("  LP-Guided vs Greedy Baseline - Unweighted MIDS Approximation")
     print(sep)
     print(hdr)
     print(sep)
@@ -321,7 +322,7 @@ def run_tests():
         r_lp = mids_lp(G)
         r_gr  = mids_greedy_baseline(G)
 
-        ok = "✓" if r_lp.verified else "✗"
+        ok = "yes" if r_lp.verified else "no"
         if not r_lp.verified:
             all_passed = False
 
@@ -347,7 +348,7 @@ def run_tests():
         )
 
     print(sep)
-    print(f"\nAll verified: {'YES ✓' if all_passed else 'NO ✗'}")
+    print(f"\nAll verified: {'YES' if all_passed else 'NO'}")
     print(f"LP-guided wins: {lp_wins}  |  Ties: {ties}  |  Greedy wins: {gr_wins}")
     print()
     print("Column legend:")
@@ -362,7 +363,7 @@ def run_tests():
     # --- Approximation ratio vs Delta analysis ---
     print("\n  Approximation Ratio vs O(Delta) Bound")
     print(sep)
-    print(f"  {'Graph':<{col['name']}}  {'Δ':>4}  {'(Δ+1)/2':>8}  {'LP ratio':>9}  {'within bound?':>14}")
+    print(f"  {'Graph':<{col['name']}}  {'Delta':>5}  {'(Delta+1)/2':>12}  {'LP ratio':>9}  {'within bound?':>14}")
     print(sep)
     for name, G in test_cases:
         G = nx.Graph(G)
@@ -370,8 +371,8 @@ def run_tests():
             continue
         r = mids_lp(G)
         bound = (r.delta + 1) / 2
-        within = "✓" if r.approx_ratio <= bound + 1e-6 else "✗"
-        print(f"  {name:<{col['name']}}  {r.delta:>4}  {bound:>8.1f}  {r.approx_ratio:>9.3f}  {within:>14}")
+        within = "yes" if r.approx_ratio <= bound + 1e-6 else "no"
+        print(f"  {name:<{col['name']}}  {r.delta:>5}  {bound:>12.1f}  {r.approx_ratio:>9.3f}  {within:>14}")
     print(sep)
 
 

@@ -1,0 +1,16 @@
+c Ladder 2x5
+c adversarial MIDS test instance generated for Iris experiments
+p edge 10 13
+e 1 2
+e 1 6
+e 2 3
+e 2 7
+e 3 4
+e 3 8
+e 4 5
+e 4 9
+e 5 10
+e 6 7
+e 7 8
+e 8 9
+e 9 10

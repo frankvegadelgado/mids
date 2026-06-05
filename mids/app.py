@@ -4,7 +4,6 @@
 
 import argparse
 import time
-import math
 
 from . import algorithm
 from . import parser
@@ -56,12 +55,12 @@ def approximate_solution(inputFile, verbose=False, log=False, count=False, brute
         output = f"{filename}: (Brute Force) {answer}"
         utils.println(output, logger, log)
         
-    logger.info("Our Algorithm with a 2-approximation solution started")
+    logger.info("Iris solution started")
     started = time.time()
     
     novel_result = algorithm.find_independent_dominating_set(graph)
 
-    logger.info(f"Our Algorithm with a 2-approximation solution done in: {(time.time() - started) * 1000.0} milliseconds")
+    logger.info(f"Iris solution done in: {(time.time() - started) * 1000.0} milliseconds")
 
     answer = utils.string_result_format(novel_result, count)
     output = f"{filename}: {answer}"
@@ -82,7 +81,7 @@ def main():
     helper.add_argument('-a', '--approximation', action='store_true', help='enable comparison with a polynomial-time approximation approach within a maximum degree factor')
     helper.add_argument('-b', '--bruteForce', action='store_true', help='enable comparison with the exponential-time brute-force approach')
     helper.add_argument('-c', '--count', action='store_true', help='calculate the size of the Independent Dominating Set')
-    helper.add_argument('-v', '--verbose', action='store_true', help='anable verbose output')
+    helper.add_argument('-v', '--verbose', action='store_true', help='enable verbose output')
     helper.add_argument('-l', '--log', action='store_true', help='enable file logging')
     helper.add_argument('--version', action='version', version='%(prog)s 0.0.1')
     
