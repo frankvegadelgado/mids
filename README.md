@@ -10,7 +10,7 @@ This work builds upon [A 3-Approximation for Independent Dominating Sets: The Si
 
 ## Definition:
 
-A **dominating set** in a graph $G = (V, E)$ is a subset $D \subseteq V$ such that every vertex not in $D$ is adjacent to at least one vertex in $D$. The **minimum independent dominating set (MIDS)** is the smallest possible dominating set in terms of the number of vertices.
+An **independent dominating set** in a graph $G = (V, E)$ is a subset $D \subseteq V$ such that no two vertices in $D$ are adjacent and every vertex not in $D$ is adjacent to at least one vertex in $D$. The **minimum independent dominating set (MIDS)** is the smallest possible independent dominating set in terms of the number of vertices.
 
 ## Key Concepts:
 
@@ -19,12 +19,12 @@ A **dominating set** in a graph $G = (V, E)$ is a subset $D \subseteq V$ such th
    - $V$: Set of vertices.
    - $E$: Set of edges connecting the vertices.
 
-2. **Dominating Set**:
+2. **Independent Dominating Set**:
 
-   - A set $D$ where for every vertex $v \in V$, either $v \in D$ or $v$ is adjacent to some vertex in $D$.
+   - A set $D$ where no two vertices in $D$ are adjacent, and for every vertex $v \in V$, either $v \in D$ or $v$ is adjacent to some vertex in $D$.
 
 3. **Minimum Independent Dominating Set**:
-   - The dominating set with the smallest cardinality (i.e., the fewest number of vertices).
+   - The independent dominating set with the smallest cardinality (i.e., the fewest number of vertices).
 
 ## Applications:
 
@@ -42,8 +42,8 @@ A **dominating set** in a graph $G = (V, E)$ is a subset $D \subseteq V$ such th
 
 1. **Greedy Algorithm**:
 
-   - Iteratively selects the vertex that covers the most uncovered vertices.
-   - Provides a logarithmic approximation ratio.
+   - Builds a degree-four auxiliary graph, repairs the two lifted vertex seeds into maximal independent sets, and selects the smallest verified candidate.
+   - Provides the implementation studied in the 3-approximation certificate theorem.
 
 2. **Integer Linear Programming (ILP)**:
 
@@ -145,7 +145,7 @@ pip install siriaisa
    testMatrix1: Independent Dominating Set Found 1, 4
    ```
 
-   This indicates nodes `1, 4` form a Independent Dominating Set.
+   This indicates nodes `1, 4` form an Independent Dominating Set.
 
 ---
 

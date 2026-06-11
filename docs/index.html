@@ -38,7 +38,7 @@
 <hr>
 <h1>Overview of the Minimum Independent Dominating Set (MIDS)</h1>
 <h2>Definition:</h2>
-<p>A <strong>dominating set</strong> in a graph $G = (V, E)$ is a subset $D \subseteq V$ such that every vertex not in $D$ is adjacent to at least one vertex in $D$. The <strong>minimum independent dominating set (MIDS)</strong> is the smallest possible dominating set in terms of the number of vertices.</p>
+<p>An <strong>independent dominating set</strong> in a graph $G = (V, E)$ is a subset $D \subseteq V$ such that no two vertices in $D$ are adjacent and every vertex not in $D$ is adjacent to at least one vertex in $D$. The <strong>minimum independent dominating set (MIDS)</strong> is the smallest possible independent dominating set in terms of the number of vertices.</p>
 <h2>Key Concepts:</h2>
 <ol>
 <li>
@@ -49,15 +49,15 @@
 </ul>
 </li>
 <li>
-<p><strong>Dominating Set</strong>:</p>
+<p><strong>Independent Dominating Set</strong>:</p>
 <ul>
-<li>A set $D$ where for every vertex $v \in V$, either $v \in D$ or $v$ is adjacent to some vertex in $D$.</li>
+<li>A set $D$ where no two vertices in $D$ are adjacent, and for every vertex $v \in V$, either $v \in D$ or $v$ is adjacent to some vertex in $D$.</li>
 </ul>
 </li>
 <li>
 <p><strong>Minimum Independent Dominating Set</strong>:</p>
 <ul>
-<li>The dominating set with the smallest cardinality (i.e., the fewest number of vertices).</li>
+<li>The independent dominating set with the smallest cardinality (i.e., the fewest number of vertices).</li>
 </ul>
 </li>
 </ol>
@@ -78,8 +78,8 @@
 <li>
 <p><strong>Greedy Algorithm</strong>:</p>
 <ul>
-<li>Iteratively selects the vertex that covers the most uncovered vertices.</li>
-<li>Provides a logarithmic approximation ratio.</li>
+<li>Builds a degree-four auxiliary graph, repairs the two lifted vertex seeds into maximal independent sets, and selects the smallest verified candidate.</li>
+<li>Provides the implementation studied in the 3-approximation certificate theorem.</li>
 </ul>
 </li>
 <li>
@@ -206,7 +206,7 @@ cd mids
 <p><strong>Example Output:</strong></p>
 <pre><code>testMatrix1: Independent Dominating Set Found 1, 4
 </code></pre>
-<p>This indicates nodes <code>1, 4</code> form a Independent Dominating Set.</p>
+<p>This indicates nodes <code>1, 4</code> form an Independent Dominating Set.</p>
 </li>
 </ol>
 <hr>

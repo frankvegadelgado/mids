@@ -8,6 +8,31 @@ import networkx as nx
 from . import approx
 
 
+def _maximal_independent_set_from_seed(graph, seed_vertices):
+    """Repair a seed order into a maximal independent set of graph."""
+    ordered_vertices = []
+    seen = set()
+
+    for vertex in seed_vertices:
+        if vertex in graph and vertex not in seen:
+            ordered_vertices.append(vertex)
+            seen.add(vertex)
+    for vertex in graph.nodes():
+        if vertex not in seen:
+            ordered_vertices.append(vertex)
+            seen.add(vertex)
+
+    independent_set = set()
+    excluded = set()
+    for vertex in ordered_vertices:
+        if vertex not in excluded:
+            independent_set.add(vertex)
+            excluded.add(vertex)
+            excluded.update(graph.neighbors(vertex))
+
+    return independent_set
+
+
 def _degree_four_auxiliary_graph(component_graph):
     """Build the sequential degree-four auxiliary graph used by Siriaisa."""
     auxiliary = component_graph.copy()
@@ -37,28 +62,42 @@ def _degree_four_auxiliary_graph(component_graph):
     return auxiliary
 
 
-def _find_component_solution(component_graph):
-    """Return the smallest verified Siriaisa candidate for one connected component."""
+def _component_candidate_details(component_graph):
+    """Return raw seeds and repaired candidates for one connected component."""
     auxiliary = _degree_four_auxiliary_graph(component_graph)
     auxiliary_solution = approx.mids_lp(auxiliary).independent_dominating_set
 
-    projected_solution = {
+    projected_seed = [
         vertex[0]
         for vertex in auxiliary_solution
         if isinstance(vertex, tuple) and len(vertex) == 2
-    }
-    complement_solution = set(component_graph) - projected_solution
+    ]
+    projected_seed_set = set(projected_seed)
+    complement_seed = [
+        vertex
+        for vertex in component_graph.nodes()
+        if vertex not in projected_seed_set
+    ]
     direct_solution = approx.mids_lp(component_graph).independent_dominating_set
 
+    return [
+        ("S1", projected_seed_set, _maximal_independent_set_from_seed(component_graph, projected_seed)),
+        ("S2", set(complement_seed), _maximal_independent_set_from_seed(component_graph, complement_seed)),
+        ("S3", set(direct_solution), set(direct_solution)),
+    ]
+
+
+def _find_component_solution(component_graph):
+    """Return the smallest repaired and verified candidate for one component."""
     candidates = sorted(
-        (projected_solution, complement_solution, direct_solution),
-        key=len,
+        _component_candidate_details(component_graph),
+        key=lambda item: len(item[2]),
     )
-    for candidate in candidates:
+    for _, _, candidate in candidates:
         if verify_independent_dominating_set(component_graph, candidate):
             return candidate
 
-    raise RuntimeError("Degree-four reduction failed: no verified candidate found")
+    raise RuntimeError("No verified independent dominating set candidate found")
 
 
 def find_independent_dominating_set(graph):
@@ -130,7 +169,11 @@ def find_independent_dominating_set_approximation(G):
     if len(G) == 0:
         return set()
 
-    return approx.mids_lp(G).independent_dominating_set
+    solution = approx.mids_lp(G).independent_dominating_set
+    if not verify_independent_dominating_set(G, solution):
+        raise RuntimeError("LP-guided MIDS routine returned an invalid independent dominating set")
+
+    return solution
 
 
 def calculate_solution_weight(G, solution):

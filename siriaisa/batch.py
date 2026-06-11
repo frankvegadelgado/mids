@@ -2,6 +2,7 @@
 # Author: Frank Vega
 
 import argparse
+from . import __version__
 from . import utils
 from . import app
 
@@ -36,7 +37,7 @@ def main():
     helper.add_argument('-c', '--count', action='store_true', help='calculate the size of the Independent Dominating Set')
     helper.add_argument('-v', '--verbose', action='store_true', help='enable verbose output')
     helper.add_argument('-l', '--log', action='store_true', help='enable file logging')
-    helper.add_argument('--version', action='version', version='%(prog)s 0.0.1')
+    helper.add_argument('--version', action='version', version=f'%(prog)s {__version__}')
 
     
     # Initialize the parameters

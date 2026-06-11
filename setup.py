@@ -2,7 +2,7 @@ from pathlib import Path
 
 import setuptools
 
-VERSION = "0.0.1"
+VERSION = "0.0.2"
 
 NAME = "siriaisa"
 
@@ -15,7 +15,7 @@ INSTALL_REQUIRES = [
 setuptools.setup(
     name=NAME,
     version=VERSION,
-    description="Compute the Approximate Independent Dominating Set for undirected graph encoded in DIMACS format.",
+    description="Compute the Approximate Independent Dominating Set for an undirected graph encoded in DIMACS format.",
     url="https://github.com/frankvegadelgado/mids",
     project_urls={
         "Source Code": "https://github.com/frankvegadelgado/mids",
