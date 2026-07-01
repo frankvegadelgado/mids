@@ -34,7 +34,7 @@
 <body>
 <h1>Siriaisa: Approximate Independent Dominating Set Solver</h1>
 <p><img src="siriaisa.jpg" alt="To my mother who I love."></p>
-<p>This work builds upon <a href="https://github.com/frankvegadelgado/mids">A 3-Approximation for Independent Dominating Sets: The Siriaisa Algorithm</a>.</p>
+<p>This work builds upon <a href="https://github.com/frankvegadelgado/mids">Constant-Factor Approximation of Independent Dominating Sets on Structured Graph Families: The Siriaisa Algorithm</a>.</p>
 <hr>
 <h1>Overview of the Minimum Independent Dominating Set (MIDS)</h1>
 <h2>Definition:</h2>
@@ -79,7 +79,7 @@
 <p><strong>Greedy Algorithm</strong>:</p>
 <ul>
 <li>Builds a degree-four auxiliary graph, repairs the two lifted vertex seeds into maximal independent sets, and selects the smallest verified candidate.</li>
-<li>Provides the implementation studied in the 3-approximation certificate theorem.</li>
+<li>Provides the implementation studied in the constant-approximation certificate theorem.</li>
 </ul>
 </li>
 <li>
@@ -284,13 +284,199 @@ options:
   --version             show program's version number and exit
 </code></pre>
 <hr>
+<h1>Reproducible Experiments</h1>
+<p>All experiments compare <strong>Siriaisa</strong> against an <strong>exact SciPy MILP</strong> optimum (<code>scipy.optimize.milp</code>, HiGHS). Siriaisa solves its own LP relaxation with <code>scipy.optimize.linprog</code> (HiGHS backend). Every instance is independently verified to be independent and dominating.</p>
+<h2>Adversarial DIMACS suite (<code>experiments/</code>)</h2>
+<p>A small hand-built suite of structural traps (paths, cycles, stars, cliques, complete bipartite, crown, double star, grid, ladder, lollipop, and a ratio-1.5 trap):</p>
+<pre><code class="language-bash">cd experiments
+python run_adversarial_milp.py
+</code></pre>
+<h2>Large-scale study: the <code>car</code> suite (<code>car/</code>)</h2>
+<p>The <code>car/</code> directory (<strong>C</strong>onstant <strong>A</strong>pproximation <strong>R</strong>atio) generates <strong>10,000 instances</strong> drawn from the structured graph families plus three random-graph models (Erdős–Rényi, Barabási–Albert, random regular), solves each with Siriaisa, and compares against the exact MILP optimum. Each instance is tagged with the approximation constant proved for its family, and any instance whose exact ratio exceeds that constant is flagged.</p>
+<h3>Reproduce</h3>
+<pre><code class="language-bash">cd car
+python run_car.py                 # full 10,000 instances (default)
+python run_car.py --count 200     # quick smoke run
+python run_car.py --dump-dimacs   # also save each instance as DIMACS under car/results/instances/
+</code></pre>
+<p>Requirements: Python &gt;= 3.12, NumPy &gt;= 2.2.1, SciPy &gt;= 1.15.0, NetworkX &gt;= 3.4.2. Results are written to <code>car/results/</code> as per-instance <code>car_results.csv</code> and per-family <code>car_summary.csv</code>. The whole run is reproducible from <code>--seed</code> (default <code>12345</code>). Instances are kept to <code>n &lt;= 40</code> so the exact MILP always terminates and every reported ratio is exact.</p>
+<h3>Results</h3>
+<p>Run on a modern x86-64 laptop (Windows 11, single-threaded). Exact ratios versus MILP over all 10,000 instances:</p>
+<table>
+<thead>
+<tr>
+<th>Family</th>
+<th>Class</th>
+<th style="text-align:right">Instances</th>
+<th style="text-align:right">Mean ratio</th>
+<th style="text-align:right">Max ratio</th>
+<th style="text-align:center">Guarantee</th>
+<th style="text-align:right">Violations</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Path <code>P_n</code></td>
+<td>bounded</td>
+<td style="text-align:right">667</td>
+<td style="text-align:right">1.0000</td>
+<td style="text-align:right">1.0000</td>
+<td style="text-align:center">≤ 2</td>
+<td style="text-align:right">0</td>
+</tr>
+<tr>
+<td>Cycle <code>C_n</code></td>
+<td>bounded</td>
+<td style="text-align:right">667</td>
+<td style="text-align:right">1.0000</td>
+<td style="text-align:right">1.0000</td>
+<td style="text-align:center">≤ 2</td>
+<td style="text-align:right">0</td>
+</tr>
+<tr>
+<td>Ladder <code>P2×Pn</code></td>
+<td>bounded</td>
+<td style="text-align:right">667</td>
+<td style="text-align:right">1.0000</td>
+<td style="text-align:right">1.0000</td>
+<td style="text-align:center">≤ 3</td>
+<td style="text-align:right">0</td>
+</tr>
+<tr>
+<td>Grid <code>Pa×Pb</code></td>
+<td>bounded</td>
+<td style="text-align:right">667</td>
+<td style="text-align:right">1.0000</td>
+<td style="text-align:right">1.0000</td>
+<td style="text-align:center">≤ 4</td>
+<td style="text-align:right">0</td>
+</tr>
+<tr>
+<td><code>r</code>-regular</td>
+<td>bounded</td>
+<td style="text-align:right">667</td>
+<td style="text-align:right">1.0029</td>
+<td style="text-align:right">1.2000</td>
+<td style="text-align:center">≤ r</td>
+<td style="text-align:right">0</td>
+</tr>
+<tr>
+<td>Balanced tree</td>
+<td>bounded</td>
+<td style="text-align:right">667</td>
+<td style="text-align:right">1.0000</td>
+<td style="text-align:right">1.0000</td>
+<td style="text-align:center">≤ Δ</td>
+<td style="text-align:right">0</td>
+</tr>
+<tr>
+<td>Lollipop <code>Kc–Pp</code></td>
+<td>bounded</td>
+<td style="text-align:right">667</td>
+<td style="text-align:right">1.0000</td>
+<td style="text-align:right">1.0000</td>
+<td style="text-align:center">≤ c</td>
+<td style="text-align:right">0</td>
+</tr>
+<tr>
+<td>Clique <code>K_n</code></td>
+<td>rigid</td>
+<td style="text-align:right">667</td>
+<td style="text-align:right">1.0000</td>
+<td style="text-align:right">1.0000</td>
+<td style="text-align:center">= 1</td>
+<td style="text-align:right">0</td>
+</tr>
+<tr>
+<td>Star <code>K_{1,n}</code></td>
+<td>rigid</td>
+<td style="text-align:right">667</td>
+<td style="text-align:right">1.0000</td>
+<td style="text-align:right">1.0000</td>
+<td style="text-align:center">= 1</td>
+<td style="text-align:right">0</td>
+</tr>
+<tr>
+<td>Complete bipartite <code>K_{a,b}</code></td>
+<td>rigid</td>
+<td style="text-align:right">667</td>
+<td style="text-align:right">1.0000</td>
+<td style="text-align:right">1.0000</td>
+<td style="text-align:center">= 1</td>
+<td style="text-align:right">0</td>
+</tr>
+<tr>
+<td>Crown</td>
+<td>rigid</td>
+<td style="text-align:right">666</td>
+<td style="text-align:right">1.0000</td>
+<td style="text-align:right">1.0000</td>
+<td style="text-align:center">= 1</td>
+<td style="text-align:right">0</td>
+</tr>
+<tr>
+<td>Double star <code>DS(a,b)</code></td>
+<td>rigid</td>
+<td style="text-align:right">666</td>
+<td style="text-align:right">1.0000</td>
+<td style="text-align:right">1.0000</td>
+<td style="text-align:center">= 1</td>
+<td style="text-align:right">0</td>
+</tr>
+<tr>
+<td>Erdős–Rényi</td>
+<td>random</td>
+<td style="text-align:right">666</td>
+<td style="text-align:right">1.0002</td>
+<td style="text-align:right">1.1429</td>
+<td style="text-align:center">≤ Δ</td>
+<td style="text-align:right">0</td>
+</tr>
+<tr>
+<td>Barabási–Albert</td>
+<td>random</td>
+<td style="text-align:right">666</td>
+<td style="text-align:right">1.0000</td>
+<td style="text-align:right">1.0000</td>
+<td style="text-align:center">≤ Δ</td>
+<td style="text-align:right">0</td>
+</tr>
+<tr>
+<td>Random tree</td>
+<td>random</td>
+<td style="text-align:right">666</td>
+<td style="text-align:right">1.0000</td>
+<td style="text-align:right">1.0000</td>
+<td style="text-align:center">≤ Δ</td>
+<td style="text-align:right">0</td>
+</tr>
+<tr>
+<td><strong>All</strong></td>
+<td>—</td>
+<td style="text-align:right"><strong>10000</strong></td>
+<td style="text-align:right"><strong>1.0002</strong></td>
+<td style="text-align:right"><strong>1.2000</strong></td>
+<td style="text-align:center">—</td>
+<td style="text-align:right"><strong>0</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Key findings:</p>
+<ul>
+<li><strong>Zero</strong> family-constant violations across all 10,000 instances.</li>
+<li><strong>9,985 / 10,000 (99.85%)</strong> solved to exact optimality.</li>
+<li>Overall <strong>mean ratio 1.0002</strong>, and the largest ratio anywhere is <strong>1.20</strong>.</li>
+<li>The only 15 non-optimal instances are sparse <code>r</code>-regular graphs (14) and one Erdős–Rényi graph, with ratios between 1.111 and 1.200 — all comfortably within their maximal-independent-set degree bound. The worst case was a 26-vertex 5-regular graph (Siriaisa returned 6 vertices against the optimum 5).</li>
+</ul>
+<p>This is the empirical counterpart of the paper's theory: the bounded-degree and random families never leave their degree constant, and the rigid families (cliques, stars, complete bipartite, crowns, double stars) are solved exactly.</p>
+<hr>
 <h1>Code</h1>
 <ul>
 <li>Python implementation by <strong>Frank Vega</strong>.</li>
 </ul>
 <hr>
 <h1>Complexity</h1>
-<pre><code class="language-diff">+ Siriaisa separates feasibility from the approximation certificate: every returned set is verified as independent and dominating, while a universal proof of the 3-approximation certificate would imply P = NP by known MIDS inapproximability results.
+<pre><code class="language-diff">+ Siriaisa separates feasibility from the approximation certificate: every returned set is verified as independent and dominating, while a universal proof of the constant-approximation certificate would imply P = NP by known MIDS inapproximability results.
 </code></pre>
 <hr>
 <h1>License</h1>
