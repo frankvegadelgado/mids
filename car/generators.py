@@ -164,7 +164,7 @@ def _families() -> list[Family]:
                lambda r: nx.erdos_renyi_graph(r.randint(8, 34), r.uniform(0.05, 0.4), seed=r.randint(0, 10**9)),
                lambda g: float(max(max_degree(g), 1))),
         Family("barabasi_albert", "random",
-               lambda r: (lambda n: nx.barabasi_albert_graph(n, r.randint(1, 4), seed=r.randint(0, 10**9)))(r.randint(8, 34)),
+               lambda r: (lambda n: nx.barabasi_albert_graph(n, r.randint(1, 2), seed=r.randint(0, 10**9)))(r.randint(8, 34)),
                lambda g: float(max(max_degree(g), 1))),
         Family("random_tree", "random",
                lambda r: build_random_tree(r.randint(2, 40), r.randint(0, 10**9)),

@@ -106,7 +106,7 @@ where the fields W and V specify the endpoints of the edge while the lower-case 
 
 _Example Solution:_
 
-Independent Dominating Set Found `1, 4`: Nodes `1` and `4` constitute an optimal solution.
+Independent Dominating Set Found `1, 2`: Nodes `1` and `2` constitute an optimal solution.
 
 ---
 
@@ -142,10 +142,10 @@ pip install siriaisa
    **Example Output:**
 
    ```
-   testMatrix1: Independent Dominating Set Found 1, 4
+   testMatrix1: Independent Dominating Set Found 1, 2
    ```
 
-   This indicates nodes `1, 4` form an Independent Dominating Set.
+   This indicates nodes `1, 2` form an Independent Dominating Set.
 
 ---
 
