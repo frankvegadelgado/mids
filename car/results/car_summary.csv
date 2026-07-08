@@ -1,0 +1,16 @@
+family,kind,count,mean_ratio,max_ratio,expected_constant,mean_delta,violations
+balanced_tree,bounded,667,1.0000,1.0000,4.0000,3.49,0
+barabasi_albert,random,666,1.0010,1.2500,21.0000,8.91,0
+clique,rigid,667,1.0000,1.0000,1.0000,6.47,0
+complete_bipartite,rigid,667,1.0000,1.0000,1.0000,8.49,0
+crown,rigid,666,1.0000,1.0000,1.0000,3.09,0
+cycle,bounded,667,1.0000,1.0000,2.0000,2.00,0
+double_star,rigid,666,1.0000,1.0000,1.0000,9.32,0
+erdos_renyi,random,666,1.0044,1.3333,20.0000,8.07,0
+grid,bounded,667,1.0063,1.2000,4.0000,3.60,0
+ladder,bounded,667,1.0501,1.2222,3.0000,2.95,0
+lollipop,bounded,667,1.0000,1.0000,8.0000,5.52,0
+path,bounded,667,1.0000,1.0000,2.0000,1.98,0
+random_tree,random,666,1.0000,1.0000,7.0000,3.77,0
+regular,bounded,667,1.0193,1.3333,5.0000,3.53,0
+star,rigid,667,1.0000,1.0000,1.0000,14.98,0

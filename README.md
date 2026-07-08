@@ -2,7 +2,7 @@
 
 ![To my mother who I love.](docs/siriaisa.jpg)
 
-This work builds upon [Constant-Factor Approximation of Independent Dominating Sets on Structured Graph Families: The Siriaisa Algorithm](https://github.com/frankvegadelgado/mids).
+This work builds upon [Siriaisa: Approximate Independent Dominating Set Solver](https://github.com/frankvegadelgado/mids).
 
 ---
 
@@ -250,68 +250,6 @@ options:
   -l, --log             enable file logging
   --version             show program's version number and exit
 ```
-
----
-
-# Reproducible Experiments
-
-All experiments compare **Siriaisa** against an **exact SciPy MILP** optimum (`scipy.optimize.milp`, HiGHS). Siriaisa solves its own LP relaxation with `scipy.optimize.linprog` (HiGHS backend). Every instance is independently verified to be independent and dominating.
-
-## Adversarial DIMACS suite (`experiments/`)
-
-A small hand-built suite of structural traps (paths, cycles, stars, cliques, complete bipartite, crown, double star, grid, ladder, lollipop, and a ratio-1.5 trap):
-
-```bash
-cd experiments
-python run_adversarial_milp.py
-```
-
-## Large-scale study: the `car` suite (`car/`)
-
-The `car/` directory (**C**onstant **A**pproximation **R**atio) generates **10,000 instances** drawn from the structured graph families plus three random-graph models (Erdős–Rényi, Barabási–Albert, random regular), solves each with Siriaisa, and compares against the exact MILP optimum. Each instance is tagged with the approximation constant proved for its family, and any instance whose exact ratio exceeds that constant is flagged.
-
-### Reproduce
-
-```bash
-cd car
-python run_car.py                 # full 10,000 instances (default)
-python run_car.py --count 200     # quick smoke run
-python run_car.py --dump-dimacs   # also save each instance as DIMACS under car/results/instances/
-```
-
-Requirements: Python >= 3.12, NumPy >= 2.2.1, SciPy >= 1.15.0, NetworkX >= 3.4.2. Results are written to `car/results/` as per-instance `car_results.csv` and per-family `car_summary.csv`. The whole run is reproducible from `--seed` (default `12345`). Instances are kept to `n <= 40` so the exact MILP always terminates and every reported ratio is exact.
-
-### Results
-
-Run on a modern x86-64 laptop (Windows 11, single-threaded). Exact ratios versus MILP over all 10,000 instances:
-
-| Family | Class | Instances | Mean ratio | Max ratio | Guarantee | Violations |
-| --- | --- | ---: | ---: | ---: | :---: | ---: |
-| Path `P_n` | bounded | 667 | 1.0000 | 1.0000 | ≤ 2 | 0 |
-| Cycle `C_n` | bounded | 667 | 1.0000 | 1.0000 | ≤ 2 | 0 |
-| Ladder `P2×Pn` | bounded | 667 | 1.0000 | 1.0000 | ≤ 3 | 0 |
-| Grid `Pa×Pb` | bounded | 667 | 1.0000 | 1.0000 | ≤ 4 | 0 |
-| `r`-regular | bounded | 667 | 1.0029 | 1.2000 | ≤ r | 0 |
-| Balanced tree | bounded | 667 | 1.0000 | 1.0000 | ≤ Δ | 0 |
-| Lollipop `Kc–Pp` | bounded | 667 | 1.0000 | 1.0000 | ≤ c | 0 |
-| Clique `K_n` | rigid | 667 | 1.0000 | 1.0000 | = 1 | 0 |
-| Star `K_{1,n}` | rigid | 667 | 1.0000 | 1.0000 | = 1 | 0 |
-| Complete bipartite `K_{a,b}` | rigid | 667 | 1.0000 | 1.0000 | = 1 | 0 |
-| Crown | rigid | 666 | 1.0000 | 1.0000 | = 1 | 0 |
-| Double star `DS(a,b)` | rigid | 666 | 1.0000 | 1.0000 | = 1 | 0 |
-| Erdős–Rényi | random | 666 | 1.0002 | 1.1429 | ≤ Δ | 0 |
-| Barabási–Albert | random | 666 | 1.0000 | 1.0000 | ≤ Δ | 0 |
-| Random tree | random | 666 | 1.0000 | 1.0000 | ≤ Δ | 0 |
-| **All** | — | **10000** | **1.0002** | **1.2000** | — | **0** |
-
-Key findings:
-
-- **Zero** family-constant violations across all 10,000 instances.
-- **9,985 / 10,000 (99.85%)** solved to exact optimality.
-- Overall **mean ratio 1.0002**, and the largest ratio anywhere is **1.20**.
-- The only 15 non-optimal instances are sparse `r`-regular graphs (14) and one Erdős–Rényi graph, with ratios between 1.111 and 1.200 — all comfortably within their maximal-independent-set degree bound. The worst case was a 26-vertex 5-regular graph (Siriaisa returned 6 vertices against the optimum 5).
-
-This is the empirical counterpart of the paper's theory: the bounded-degree and random families never leave their degree constant, and the rigid families (cliques, stars, complete bipartite, crowns, double stars) are solved exactly.
 
 ---
 
