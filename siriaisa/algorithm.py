@@ -1,61 +1,126 @@
 # Created on 01/06/2025
 # Author: Frank Vega
-# Linear-time guarded implementation for independent dominating set.
 
-from collections import deque
+"""
+Linear-time heuristic for the Minimum Independent Dominating Set problem.
+
+The public routine `find_independent_dominating_set` always returns a valid
+independent dominating set for a finite undirected NetworkX graph.  It is not
+an exact solver for MIDS, which is NP-hard; the guarantee here is feasibility
+and O(|V| + |E|) running time.
+
+The implementation follows the Siriaisa/MIDS idea of repairing deterministic
+seeds into maximal independent sets, but removes all non-linear pieces: no LP,
+no sorting, no quadratic verification, no repeated reverse-delete, and no local
+exchange search.  Degree priority is implemented with buckets, so the high- and
+low-degree sweeps are linear for simple graphs.
+"""
+
 import itertools
+from typing import Iterable, List, Sequence, Set, Tuple
 
 import networkx as nx
 
-from . import maxcut
 
 # ---------------------------------------------------------------------------
-# Linear validation and pruning helpers
+# Linear verification and repair
 # ---------------------------------------------------------------------------
 
-def _verify_independent_dominating_set_linear(G: nx.Graph, solution: set) -> bool:
-    """Return True iff solution is independent and dominating in O(|V| + |E|)."""
-    if solution is None:
-        return False
+def _clean_graph(graph: nx.Graph) -> nx.Graph:
+    """Return a simple undirected copy with self-loops ignored."""
+    if graph.is_directed():
+        raise ValueError("Input must be an undirected NetworkX Graph.")
 
-    solution = set(solution)
-    if not solution.issubset(G.nodes):
-        return False
-
-    dominated = {v: False for v in G.nodes}
-
-    for v in solution:
-        dominated[v] = True
-
-    for u, v in G.edges():
-        if u in solution and v in solution:
-            return False
-        if u in solution:
-            dominated[v] = True
-        if v in solution:
-            dominated[u] = True
-
-    return all(dominated.values())
+    # nx.Graph(graph) is an O(n + m) copy and collapses possible parallel edges
+    # if a graph-like object is passed.
+    G = nx.Graph(graph)
+    G.remove_edges_from(nx.selfloop_edges(G))
+    return G
 
 
-def repair_prune(G: nx.Graph, candidate: set):
+def _degree_bucket_orders(G: nx.Graph) -> Tuple[List, List]:
     """
-    Repair a proposed candidate into an independent dominating set, then prune
-    redundant vertices.
+    Return (high_degree_order, low_degree_order) in O(|V| + |E|).
 
-    Runtime: O(|V| + |E|).
+    For a simple graph, Delta <= |V|-1, so bucket allocation is O(|V|).  Ties
+    preserve NetworkX node iteration order instead of sorting by labels.
     """
-    if not isinstance(G, nx.Graph):
+    nodes = list(G.nodes())
+    if not nodes:
+        return [], []
+
+    degrees = {}
+    max_degree = 0
+    for v in nodes:
+        degree = G.degree(v)
+        degrees[v] = degree
+        if degree > max_degree:
+            max_degree = degree
+
+    buckets = [[] for _ in range(max_degree + 1)]
+    for v in nodes:
+        buckets[degrees[v]].append(v)
+
+    low_order = []
+    for degree in range(max_degree + 1):
+        low_order.extend(buckets[degree])
+
+    high_order = []
+    for degree in range(max_degree, -1, -1):
+        high_order.extend(buckets[degree])
+
+    return high_order, low_order
+
+
+def repair_prune(G: nx.Graph, candidate: Set = None, order: Sequence = None) -> Set:
+    """
+    Repair a seed into an independent dominating set, then do one linear prune.
+
+    The repair phase is a greedy maximal-independent-set sweep.  A maximal
+    independent set is automatically dominating: if an unselected vertex had no
+    selected neighbor, it could be added, contradicting maximality.
+
+    Parameters
+    ----------
+    G:
+        Undirected simple NetworkX graph.  Self-loops are ignored by the public
+        entry point before this helper is called.
+    candidate:
+        Vertices that should be tried first.  Invalid vertices are ignored.
+    order:
+        Linear order used both to process the candidate seed and to complete the
+        maximal independent set.  If omitted, G.nodes() order is used.
+
+    Runtime
+    -------
+    O(|V| + |E|), expected under Python set/dict operations.
+    """
+    if not isinstance(G, nx.Graph) or G.is_directed():
         raise ValueError("G must be an undirected NetworkX Graph.")
 
     if G.number_of_nodes() == 0:
         return set()
 
+    nodes = list(G.nodes()) if order is None else list(order)
+
+    # Ensure all graph nodes appear once in the sweep, even if a custom order is
+    # incomplete.  This append is linear because every membership test is O(1).
+    seen = set()
+    sweep = []
+    for v in nodes:
+        if v in G and v not in seen:
+            sweep.append(v)
+            seen.add(v)
+    for v in G.nodes():
+        if v not in seen:
+            sweep.append(v)
+            seen.add(v)
+
     candidate = set() if candidate is None else set(candidate)
     candidate.intersection_update(G.nodes)
 
     selected = set()
-    dominated_count = {v: 0 for v in G.nodes}
+    dominated_count = {v: 0 for v in G.nodes()}
 
     def add_vertex(v):
         selected.add(v)
@@ -63,18 +128,19 @@ def repair_prune(G: nx.Graph, candidate: set):
         for u in G.neighbors(v):
             dominated_count[u] += 1
 
-    # Keep as much of candidate as possible while enforcing independence.
-    for v in G.nodes:
+    # First keep as much of the supplied seed as possible, in the requested
+    # order, while maintaining independence.
+    for v in sweep:
         if v in candidate and dominated_count[v] == 0:
             add_vertex(v)
 
-    # Repair domination by extending to a maximal independent set.
-    for v in G.nodes:
+    # Then complete to a maximal independent set, hence domination is repaired.
+    for v in sweep:
         if dominated_count[v] == 0:
             add_vertex(v)
 
-    # Prune redundant selected vertices.
-    # Removing vertices cannot break independence, only domination.
+    # One-pass reverse-delete pruning.  Each selected vertex is tested once and,
+    # if removed, its closed-neighborhood counters are updated once.
     for v in list(selected):
         if dominated_count[v] <= 1:
             continue
@@ -94,323 +160,36 @@ def repair_prune(G: nx.Graph, candidate: set):
     return selected
 
 
-# ---------------------------------------------------------------------------
-# Linear candidate generators
-# ---------------------------------------------------------------------------
+def _linear_candidates(G: nx.Graph) -> Iterable[Set]:
+    """Generate a constant number of linear-time candidates."""
+    natural = list(G.nodes())
+    high_degree, low_degree = _degree_bucket_orders(G)
 
-
-def _exact_small_component_mids(G: nx.Graph, limit: int = 16):
-    """
-    Exact MIDS for components of size at most `limit`, using bit masks.
-
-    Because `limit` is a fixed constant, this is O(1) per small component in
-    asymptotic terms and the whole algorithm remains O(|V| + |E|). It is an
-    adversarial guard: every small component is solved exactly instead of being
-    left to a heuristic order.
-    """
-    n = G.number_of_nodes()
-    if n > limit:
-        return None
-    if n == 0:
-        return set()
-
-    nodes = list(G.nodes)
-    index = {v: i for i, v in enumerate(nodes)}
-    closed = [0] * n
-
-    for i, v in enumerate(nodes):
-        mask = 1 << i
-        for u in G.neighbors(v):
-            mask |= 1 << index[u]
-        closed[i] = mask
-
-    all_vertices = (1 << n) - 1
-
-    for size in range(1, n + 1):
-        for combo in itertools.combinations(range(n), size):
-            chosen = 0
-            dominated = 0
-            feasible = True
-
-            for i in combo:
-                # closed[i] without bit i is the open-neighborhood bit mask.
-                if chosen & (closed[i] ^ (1 << i)):
-                    feasible = False
-                    break
-                chosen |= 1 << i
-                dominated |= closed[i]
-
-            if feasible and dominated == all_vertices:
-                return {nodes[i] for i in combo}
-
-    return None
-
-
-def _dominating_singleton(G: nx.Graph):
-    """
-    Return {v} if v alone dominates this connected component; otherwise None.
-
-    For a component with no isolates, this is equivalent to deg(v) = n - 1.
-    This exactly catches the universal-vertex adversary in O(|V|).
-    """
-    n = G.number_of_nodes()
-    if n == 0:
-        return set()
-
-    target_degree = n - 1
-    for v in G.nodes:
-        if G.degree(v) == target_degree:
-            return {v}
-
-    return None
-
-
-def _degree_bucket_order(G: nx.Graph, descending: bool):
-    """
-    Yield vertices in nondecreasing or nonincreasing degree order using buckets.
-
-    Runtime: O(|V| + |E|), since degrees are integers in [0, |V|-1].
-    This avoids Python comparison sorting.
-    """
-    n = G.number_of_nodes()
-    buckets = [[] for _ in range(n)]
-
-    for v in G.nodes:
-        buckets[G.degree(v)].append(v)
-
-    if descending:
-        degree_range = range(n - 1, -1, -1)
-    else:
-        degree_range = range(n)
-
-    for degree in degree_range:
-        for v in buckets[degree]:
-            yield v
-
-
-def _maximal_independent_set_from_order(G: nx.Graph, order):
-    """
-    Build a maximal independent set from the supplied order.
-
-    A maximal independent set is always an independent dominating set.
-    Runtime: O(|V| + |E|).
-    """
-    selected = set()
-    dominated = {v: False for v in G.nodes}
-
-    def add_vertex(v):
-        selected.add(v)
-        dominated[v] = True
-        for u in G.neighbors(v):
-            dominated[u] = True
-
-    for v in order:
-        if not dominated[v]:
-            add_vertex(v)
-
-    return selected
-
-
-def _original_order_candidate(G: nx.Graph):
-    return _maximal_independent_set_from_order(G, G.nodes)
-
-
-def _reverse_order_candidate(G: nx.Graph):
-    return _maximal_independent_set_from_order(G, reversed(list(G.nodes)))
-
-
-def _high_degree_candidate(G: nx.Graph):
-    return _maximal_independent_set_from_order(
-        G, _degree_bucket_order(G, descending=True)
+    # Natural and reverse-natural keep previous deterministic behavior robust to
+    # insertion order.  High-degree is the main repair for universal/hub traps.
+    orders = (
+        high_degree,
+        low_degree,
+        natural,
+        list(reversed(natural)),
     )
 
-
-def _low_degree_candidate(G: nx.Graph):
-    return _maximal_independent_set_from_order(
-        G, _degree_bucket_order(G, descending=False)
-    )
+    for order in orders:
+        yield repair_prune(G, set(order), order)
 
 
-
-def _seeded_candidate(G: nx.Graph, seed, order):
-    """
-    Build a maximal independent set after forcing one seed vertex first.
-
-    Runtime: O(|V| + |E|). This is a constant-factor safeguard for cases where
-    the right high-coverage vertex is skipped by a pure order scan.
-    """
-    if seed not in G:
-        return set()
-
-    def seeded_order():
-        yield seed
-        for v in order:
-            if v != seed:
-                yield v
-
-    return _maximal_independent_set_from_order(G, seeded_order())
-
-
-def _top_degree_seeds(G: nx.Graph, limit: int = 8):
-    """
-    Return up to `limit` highest-degree vertices using buckets, no sorting.
-
-    Runtime: O(|V| + |E|) for fixed limit.
-    """
-    seeds = []
-    for v in _degree_bucket_order(G, descending=True):
-        seeds.append(v)
-        if len(seeds) >= limit:
-            break
-    return seeds
-
-
-
-def _seed_then_best_residual_candidate(G: nx.Graph, seed, completion_order):
-    """
-    Force `seed`, choose one nonadjacent vertex that covers the largest number
-    of still-undominated vertices, then complete to a maximal independent set.
-
-    For a fixed seed this is O(|V| + |E|). Since only constantly many seeds are
-    tried, the total routine remains linear.
-    """
-    if seed not in G:
-        return set()
-
-    selected = {seed}
-    dominated = {v: False for v in G.nodes}
-    dominated[seed] = True
-    for u in G.neighbors(seed):
-        dominated[u] = True
-
-    forbidden = {seed}
-    forbidden.update(G.neighbors(seed))
-
-    score = {v: 0 for v in G.nodes}
-    for x in G.nodes:
-        if dominated[x]:
-            continue
-
-        if x not in forbidden:
-            score[x] += 1
-
-        for y in G.neighbors(x):
-            if y not in forbidden:
-                score[y] += 1
-
+def _best_linear_component_solution(component_graph: nx.Graph) -> Set:
+    """Return the smallest verified candidate for one component in linear time."""
     best = None
-    best_score = 0
-    for v in G.nodes:
-        if score[v] > best_score:
-            best = v
-            best_score = score[v]
-
-    def order():
-        yield seed
-        if best is not None and best_score > 0:
-            yield best
-        for v in completion_order:
-            if v != seed and v != best:
-                yield v
-
-    return _maximal_independent_set_from_order(G, order())
-
-
-def _max_cut_bipartite_candidate_pair(G: nx.Graph):
-    """
-    Return two projected max-cut candidates from the lifted bipartite graph.
-
-    Both projections are repaired/pruned later. Returning both sides is a
-    constant-factor linear-time safeguard against an unlucky orientation.
-    """
-    B = nx.Graph()
-    for u, v in G.edges():
-        B.add_edges_from([((u, 0), (v, 1)), ((u, 1), (v, 0))])
-
-    result = maxcut.maxcut_bipartite_min_side_linear(B, minimize_side=1)
-    if not result.get("feasible", False):
-        return []
-
-    return [
-        {u for u, _ in result["side_1"]},
-        {u for u, _ in result["side_0"]},
-    ]
-
-
-def max_cut_bipartite(G: nx.Graph):
-    """
-    Backward-compatible public helper: return the side_1 projection.
-    """
-    pair = _max_cut_bipartite_candidate_pair(G)
-    return pair[0] if pair else set()
-
-
-def _best_linear_component_solution(G: nx.Graph):
-    """
-    Compute a guarded linear-time independent dominating set for one component.
-
-    Strategy
-    --------
-    1. Exact constant-size guard: components with at most 16 vertices are solved
-       exactly. The cutoff is fixed, so the global asymptotic time is linear.
-    2. Exact singleton guard: if a universal vertex exists, return it.
-       This fixes the universal-vertex/triangle adversary exactly.
-    3. Build several constant-many linear candidates:
-       - max-cut side_1 projection;
-       - max-cut side_0 projection;
-       - original-order maximal independent set;
-       - reverse-order maximal independent set;
-       - high-degree-first maximal independent set;
-       - low-degree-first maximal independent set.
-    3. Repair/prune every candidate and return the smallest valid result.
-
-    Runtime: O(|V| + |E|), with a constant number of linear passes.
-    """
-    exact_small = _exact_small_component_mids(G, limit=16)
-    if exact_small is not None:
-        return exact_small
-
-    singleton = _dominating_singleton(G)
-    if singleton is not None:
-        return singleton
-
-    raw_candidates = []
-    raw_candidates.extend(_max_cut_bipartite_candidate_pair(G))
-    raw_candidates.append(_original_order_candidate(G))
-    raw_candidates.append(_reverse_order_candidate(G))
-    raw_candidates.append(_high_degree_candidate(G))
-    raw_candidates.append(_low_degree_candidate(G))
-
-    # Seed the highest-degree vertices, then complete by different linear orders.
-    # The seed limit is a fixed constant, so this preserves O(|V| + |E|).
-    original_nodes = list(G.nodes)
-    reverse_nodes = list(reversed(original_nodes))
-    for seed in _top_degree_seeds(G, limit=8):
-        raw_candidates.append(_seeded_candidate(G, seed, original_nodes))
-        raw_candidates.append(_seeded_candidate(G, seed, reverse_nodes))
-        raw_candidates.append(_seeded_candidate(G, seed, _degree_bucket_order(G, descending=True)))
-        raw_candidates.append(_seeded_candidate(G, seed, _degree_bucket_order(G, descending=False)))
-
-        # After forcing a promising seed, also try the best residual-covering
-        # second vertex. This detects many two-center adversaries in linear time.
-        raw_candidates.append(_seed_then_best_residual_candidate(G, seed, original_nodes))
-        raw_candidates.append(_seed_then_best_residual_candidate(G, seed, reverse_nodes))
-        raw_candidates.append(_seed_then_best_residual_candidate(G, seed, _degree_bucket_order(G, descending=True)))
-        raw_candidates.append(_seed_then_best_residual_candidate(G, seed, _degree_bucket_order(G, descending=False)))
-
-    best = None
-
-    for candidate in raw_candidates:
-        repaired = repair_prune(G, candidate)
-        if not _verify_independent_dominating_set_linear(G, repaired):
-            continue
-        if best is None or len(repaired) < len(best):
-            best = repaired
+    for candidate in _linear_candidates(component_graph):
+        if verify_independent_dominating_set(component_graph, candidate):
+            if best is None or len(candidate) < len(best):
+                best = candidate
 
     if best is None:
-        # This should not happen because every maximal independent set is an IDS,
-        # but keep a safe linear fallback.
-        best = repair_prune(G, set())
+        # This should not happen: every maximal independent set is independent
+        # and dominating.  Keep an explicit failure mode for corrupted inputs.
+        raise RuntimeError("No verified independent dominating set candidate found")
 
     return best
 
@@ -421,15 +200,11 @@ def _best_linear_component_solution(G: nx.Graph):
 
 def find_independent_dominating_set(graph):
     """
-    Approximate a minimum independent dominating set for an undirected graph.
+    Return a valid independent dominating set in O(|V| + |E|).
 
-    The implementation is linear-time up to a constant number of passes over
-    each connected component. It contains an exact singleton-dominator guard
-    and chooses the smallest valid result among several linear candidates.
-
-    This overcomes the previous adversarial family where a universal vertex is
-    hidden after many leaves and a small odd cycle makes the old order-driven
-    repair return almost all leaves.
+    This is a linear-time heuristic, not an exact MIDS solver.  It uses a
+    constant number of bucket-ordered maximal-independent-set repairs and keeps
+    the smallest verified candidate per connected component.
     """
     if not isinstance(graph, nx.Graph):
         raise ValueError("Input must be an undirected NetworkX Graph.")
@@ -437,18 +212,13 @@ def find_independent_dominating_set(graph):
     if graph.number_of_nodes() == 0:
         return set()
 
-    working_graph = graph.copy()
-    working_graph.remove_edges_from(list(nx.selfloop_edges(working_graph)))
+    working_graph = _clean_graph(graph)
+    solution = set()
 
-    # Isolated vertices must be selected to dominate themselves.
-    solution = set(nx.isolates(working_graph))
-    working_graph.remove_nodes_from(solution)
-
-    if working_graph.number_of_nodes() == 0:
-        return solution
-
+    # Building each component subgraph copies each edge/vertex exactly once in
+    # total over all components, so the total remains O(n + m).
     for component in nx.connected_components(working_graph):
-        component_graph = working_graph.subgraph(component)
+        component_graph = working_graph.subgraph(component).copy()
         solution.update(_best_linear_component_solution(component_graph))
 
     return solution
@@ -458,20 +228,18 @@ def find_independent_dominating_set_brute_force(graph):
     """
     Compute an exact minimum independent dominating set in exponential time.
 
-    Args:
-        graph: A NetworkX graph.
-
-    Returns:
-        A minimum independent dominating set.
+    This helper is intentionally not linear; it is kept only for testing small
+    graphs against the heuristic.
     """
     if graph.number_of_nodes() == 0:
         return set()
 
-    nodes = list(graph.nodes())
+    G = _clean_graph(graph)
+    nodes = list(G.nodes())
     for size in range(1, len(nodes) + 1):
         for candidate in itertools.combinations(nodes, size):
             candidate_set = set(candidate)
-            if verify_independent_dominating_set(graph, candidate_set):
+            if verify_independent_dominating_set(G, candidate_set):
                 return candidate_set
 
     return None
@@ -479,22 +247,13 @@ def find_independent_dominating_set_brute_force(graph):
 
 def find_independent_dominating_set_approximation(G):
     """
-    Run the LP-guided MIDS approximation directly on the input graph.
+    Backward-compatible alias for the linear public routine.
 
-    This function is preserved for API compatibility with the previous file.
-    It requires an external `approx` module in the package namespace.
+    The previous repository variant used an LP-guided approximation here; that
+    is not linear because LP solving is not O(|V| + |E|).  This alias preserves
+    the API while keeping the promised linear-time end-to-end behavior.
     """
-    if len(G) == 0:
-        return set()
-
-    if approx is None:
-        raise RuntimeError("LP-guided approximation requires the package's approx module")
-
-    solution = approx.mids_lp(G).independent_dominating_set
-    if not verify_independent_dominating_set(G, solution):
-        raise RuntimeError("LP-guided MIDS routine returned an invalid independent dominating set")
-
-    return solution
+    return find_independent_dominating_set(G)
 
 
 def calculate_solution_weight(G, solution):
@@ -503,5 +262,33 @@ def calculate_solution_weight(G, solution):
 
 
 def verify_independent_dominating_set(G, solution):
-    """Return True when solution is both independent and dominating."""
-    return _verify_independent_dominating_set_linear(G, solution)
+    """Return True iff solution is independent and dominating, in O(n + m)."""
+    if solution is None or not isinstance(G, nx.Graph) or G.is_directed():
+        return False
+
+    solution = set(solution)
+    if not solution.issubset(G.nodes):
+        return False
+
+    selected = {v: False for v in G.nodes()}
+    dominated = {v: False for v in G.nodes()}
+
+    for v in solution:
+        selected[v] = True
+        dominated[v] = True
+
+    for u, v in G.edges():
+        if u == v:
+            # The algorithm treats self-loops as irrelevant, preserving the
+            # previous public behavior where pairwise combinations ignored them.
+            continue
+
+        if selected[u] and selected[v]:
+            return False
+
+        if selected[u]:
+            dominated[v] = True
+        if selected[v]:
+            dominated[u] = True
+
+    return all(dominated.values())

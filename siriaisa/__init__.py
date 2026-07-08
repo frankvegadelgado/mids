@@ -3,4 +3,4 @@
 
 __version__ = "0.0.4"
 
-__all__ = ["__version__", "utils", "maxcut", "algorithm", "parser", "applogger", "test", "app", "batch"]
+__all__ = ["__version__", "utils", "algorithm", "parser", "applogger", "test", "app", "batch"]
