@@ -2,21 +2,19 @@
 # Author: Frank Vega
 
 """
-Linear Baker-style candidate for Minimum Independent Dominating Set (MIDS).
+Weighted Baker-style candidate for the Minimum Weighted Independent
+Dominating Set problem (MWIDS).
 
-This module exposes ``baker_ptas_ids(G, eps=1.0, weights=None)``.  It is
-intended as a fixed-epsilon candidate generator for the main ``algorithm.py``.
-It always returns a valid independent dominating set, and for fixed epsilon it
-runs in O(|V| + |E|) time under expected O(1) Python set/dict operations.
+The public function ``baker_layer_weighted_ids_candidate`` is a fixed-epsilon
+linear-time candidate generator.  With eps=1.0 it performs only a constant
+number of BFS-layer shifts.  It always returns a valid independent dominating
+set, but it is not a true Baker PTAS: exact bounded-treewidth MWIDS dynamic
+programming is intentionally not implemented because the requested final
+routine must remain linear-time.
 
-Important note
---------------
-The classical Baker PTAS solves bounded-layer planar subproblems exactly by
-bounded-treewidth dynamic programming.  Exact MIDS dynamic programming is not
-implemented here, because the user's target was a practical linear-time final
-routine.  Instead, this file uses Baker-style BFS layer deletion plus safe
-maximal-independent-set repair on the original graph.  Thus this is a linear
-Baker-style IDS candidate, not a universal PTAS proof.
+Weights are read from node attribute ``weight`` by default.  Missing weights
+are treated as 1.0.  Non-positive weights are accepted for summation, but the
+ordering ratios use a tiny positive denominator to avoid division by zero.
 """
 
 from __future__ import annotations
@@ -25,6 +23,9 @@ from collections import deque
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Set
 
 import networkx as nx
+
+
+_EPS = 1.0e-12
 
 
 def _clean_graph(graph: nx.Graph) -> nx.Graph:
@@ -36,14 +37,29 @@ def _clean_graph(graph: nx.Graph) -> nx.Graph:
     return G
 
 
-def _closed_neighborhood(G: nx.Graph, v: Any) -> Iterable[Any]:
-    """Yield v and then all neighbours of v."""
+def _closed(G: nx.Graph, v: Any) -> Iterable[Any]:
+    """Yield the closed neighbourhood N[v]."""
     yield v
     yield from G.neighbors(v)
 
 
+def _node_weight(G: nx.Graph, v: Any, weight: str = "weight") -> float:
+    """Return the objective weight of v."""
+    return float(G.nodes[v].get(weight, 1.0))
+
+
+def _ratio_denominator(G: nx.Graph, v: Any, weight: str = "weight") -> float:
+    """Positive denominator used only for ordering ratios."""
+    return max(_node_weight(G, v, weight), _EPS)
+
+
+def solution_weight(G: nx.Graph, S: Iterable[Any], weight: str = "weight") -> float:
+    """Return total solution weight."""
+    return sum(_node_weight(G, v, weight) for v in S)
+
+
 def verify_independent_dominating_set(G: nx.Graph, S: Optional[Set[Any]]) -> bool:
-    """Return True iff S is independent and dominating in O(n + m)."""
+    """Return True iff S is independent and dominating in O(n+m)."""
     if S is None:
         return False
     S = set(S)
@@ -68,7 +84,7 @@ def verify_independent_dominating_set(G: nx.Graph, S: Optional[Set[Any]]) -> boo
 
 
 def _append_unique(out: List[Any], values: Iterable[Any], allowed: Set[Any]) -> None:
-    """Append allowed values to out without duplicates, preserving order."""
+    """Append allowed values to out without duplicates."""
     seen = set(out)
     for v in values:
         if v in allowed and v not in seen:
@@ -76,43 +92,25 @@ def _append_unique(out: List[Any], values: Iterable[Any], allowed: Set[Any]) -> 
             seen.add(v)
 
 
-def _weighted_bucket_order(
-    G: nx.Graph,
-    allowed: Iterable[Any],
-    weights: Optional[Dict[Any, float]] = None,
+def _fixed_bucket_order_from_scores(
+    nodes: List[Any],
+    scores: Dict[Any, float],
     bucket_count: int = 256,
+    high_to_low: bool = True,
 ) -> List[Any]:
-    """
-    Return a linear-time weighted closed-degree order.
-
-    Vertices are ranked by approximately (degree(v)+1)/weight(v).  A fixed
-    number of buckets avoids comparison sorting and keeps the routine linear.
-    """
-    nodes = list(allowed)
+    """Bucket-order arbitrary numeric scores in linear time for fixed buckets."""
     if not nodes:
         return []
-    weights = {} if weights is None else weights
-
-    scores = []
-    min_score = float("inf")
-    max_score = float("-inf")
-    for v in nodes:
-        w = max(float(weights.get(v, 1.0)), 1e-12)
-        s = (G.degree(v) + 1) / w
-        scores.append((v, s))
-        if s < min_score:
-            min_score = s
-        if s > max_score:
-            max_score = s
-
-    if max_score <= min_score:
-        return nodes
-
     bucket_count = max(2, bucket_count)
+    lo = min(scores[v] for v in nodes)
+    hi = max(scores[v] for v in nodes)
+    if hi <= lo:
+        return list(nodes)
+
     buckets: List[List[Any]] = [[] for _ in range(bucket_count)]
-    scale = (bucket_count - 1) / (max_score - min_score)
-    for v, s in scores:
-        idx = int((s - min_score) * scale)
+    scale = (bucket_count - 1) / (hi - lo)
+    for v in nodes:
+        idx = int((scores[v] - lo) * scale)
         if idx < 0:
             idx = 0
         elif idx >= bucket_count:
@@ -120,13 +118,49 @@ def _weighted_bucket_order(
         buckets[idx].append(v)
 
     order: List[Any] = []
-    for idx in range(bucket_count - 1, -1, -1):
+    rng = range(bucket_count - 1, -1, -1) if high_to_low else range(bucket_count)
+    for idx in rng:
         order.extend(buckets[idx])
     return order
 
 
+def weighted_bucket_order(
+    G: nx.Graph,
+    allowed: Iterable[Any],
+    weight: str = "weight",
+    mode: str = "coverage_per_weight",
+    bucket_count: int = 256,
+) -> List[Any]:
+    """
+    Return a linear-time order for weighted IDS repair.
+
+    Supported modes:
+      * coverage_per_weight: large |N[v]| / w(v) first.
+      * cheap: small w(v) first.
+      * expensive: large w(v) first.
+      * degree: large degree first.
+    """
+    nodes = list(allowed)
+    if not nodes:
+        return []
+
+    if mode == "coverage_per_weight":
+        scores = {v: (G.degree(v) + 1) / _ratio_denominator(G, v, weight) for v in nodes}
+        return _fixed_bucket_order_from_scores(nodes, scores, bucket_count, True)
+    if mode == "cheap":
+        scores = {v: _node_weight(G, v, weight) for v in nodes}
+        return _fixed_bucket_order_from_scores(nodes, scores, bucket_count, False)
+    if mode == "expensive":
+        scores = {v: _node_weight(G, v, weight) for v in nodes}
+        return _fixed_bucket_order_from_scores(nodes, scores, bucket_count, True)
+    if mode == "degree":
+        scores = {v: float(G.degree(v)) for v in nodes}
+        return _fixed_bucket_order_from_scores(nodes, scores, bucket_count, True)
+    raise ValueError(f"unknown weighted order mode: {mode}")
+
+
 def _bfs_layers_all_components(G: nx.Graph) -> Dict[Any, int]:
-    """Return BFS depth labels for every component in O(n + m)."""
+    """Return BFS depths for every component in O(n+m)."""
     layers: Dict[Any, int] = {}
     for root in G.nodes():
         if root in layers:
@@ -142,43 +176,58 @@ def _bfs_layers_all_components(G: nx.Graph) -> Dict[Any, int]:
     return layers
 
 
-def repair_prune(
+def repair_prune_weighted(
     G: nx.Graph,
     candidate: Optional[Set[Any]] = None,
     order: Optional[Sequence[Any]] = None,
+    weight: str = "weight",
 ) -> Set[Any]:
     """
-    Repair candidate into a maximal independent set, hence an IDS.
+    Repair a seed into a maximal independent set, then prune by weight.
 
-    A maximal independent set is dominating: every vertex not selected has a
-    selected neighbour, otherwise it could be added.  This routine is linear.
+    Greedy maximal independent repair guarantees domination. The prune phase
+    removes a selected vertex whenever domination remains valid. Runtime is
+    O(n+m).
     """
     if G.number_of_nodes() == 0:
         return set()
 
-    nodes = set(G.nodes())
-    order_list = list(G.nodes()) if order is None else list(order)
+    allowed = set(G.nodes())
     sweep: List[Any] = []
-    _append_unique(sweep, order_list, nodes)
-    _append_unique(sweep, G.nodes(), nodes)
+    _append_unique(sweep, list(G.nodes()) if order is None else order, allowed)
+    _append_unique(sweep, G.nodes(), allowed)
+    candidate = set() if candidate is None else set(candidate) & allowed
 
-    candidate = set() if candidate is None else set(candidate) & nodes
     selected: Set[Any] = set()
-    dominated_count: Dict[Any, int] = {v: 0 for v in G.nodes()}
+    dom_count: Dict[Any, int] = {v: 0 for v in G.nodes()}
 
-    def add_vertex(v: Any) -> None:
+    def add(v: Any) -> None:
         selected.add(v)
-        dominated_count[v] += 1
+        dom_count[v] += 1
         for u in G.neighbors(v):
-            dominated_count[u] += 1
+            dom_count[u] += 1
 
     for v in sweep:
-        if v in candidate and dominated_count[v] == 0:
-            add_vertex(v)
-
+        if v in candidate and dom_count[v] == 0:
+            add(v)
     for v in sweep:
-        if dominated_count[v] == 0:
-            add_vertex(v)
+        if dom_count[v] == 0:
+            add(v)
+
+    prune_order = weighted_bucket_order(G, selected, weight=weight, mode="expensive")
+    for v in prune_order:
+        if v not in selected or dom_count[v] <= 1:
+            continue
+        removable = True
+        for u in G.neighbors(v):
+            if dom_count[u] <= 1:
+                removable = False
+                break
+        if removable:
+            selected.remove(v)
+            dom_count[v] -= 1
+            for u in G.neighbors(v):
+                dom_count[u] -= 1
 
     return selected
 
@@ -187,58 +236,50 @@ def _one_layer_candidate(
     G: nx.Graph,
     kept: Set[Any],
     separator: Set[Any],
-    weights: Optional[Dict[Any, float]],
+    weight: str,
 ) -> Set[Any]:
-    """Build one Baker-shift candidate and repair it on the original graph."""
+    """Build one weighted Baker-layer candidate and repair on G."""
     all_nodes = set(G.nodes())
-
-    kept_order = _weighted_bucket_order(G, kept, weights)
-    sep_order = _weighted_bucket_order(G, separator, weights)
-    full_order = _weighted_bucket_order(G, all_nodes, weights)
+    kept_order = weighted_bucket_order(G, kept, weight=weight, mode="coverage_per_weight")
+    sep_order = weighted_bucket_order(G, separator, weight=weight, mode="coverage_per_weight")
+    cheap_order = weighted_bucket_order(G, all_nodes, weight=weight, mode="cheap")
+    ratio_order = weighted_bucket_order(G, all_nodes, weight=weight, mode="coverage_per_weight")
 
     seed: Set[Any] = set()
     if kept:
         H = G.subgraph(kept).copy()
-        seed = repair_prune(H, set(kept_order), kept_order)
+        seed = repair_prune_weighted(H, set(kept_order), kept_order, weight=weight)
 
     order_a: List[Any] = []
     _append_unique(order_a, seed, all_nodes)
     _append_unique(order_a, kept_order, all_nodes)
     _append_unique(order_a, sep_order, all_nodes)
-    _append_unique(order_a, full_order, all_nodes)
-    cand_a = repair_prune(G, seed, order_a)
+    _append_unique(order_a, cheap_order, all_nodes)
+    _append_unique(order_a, ratio_order, all_nodes)
+    cand_a = repair_prune_weighted(G, seed, order_a, weight=weight)
 
     order_b: List[Any] = []
     _append_unique(order_b, sep_order, all_nodes)
     _append_unique(order_b, kept_order, all_nodes)
-    _append_unique(order_b, full_order, all_nodes)
-    cand_b = repair_prune(G, set(sep_order), order_b)
+    _append_unique(order_b, cheap_order, all_nodes)
+    _append_unique(order_b, ratio_order, all_nodes)
+    cand_b = repair_prune_weighted(G, set(sep_order), order_b, weight=weight)
 
-    return min((cand_a, cand_b), key=lambda S: (_weight_sum(S, weights), len(S)))
-
-
-def _weight_sum(S: Set[Any], weights: Optional[Dict[Any, float]]) -> float:
-    """Return total weight for tie-breaking."""
-    if weights is None:
-        return float(len(S))
-    return sum(float(weights.get(v, 1.0)) for v in S)
+    return min((cand_a, cand_b), key=lambda S: (solution_weight(G, S, weight), len(S)))
 
 
-def baker_ptas_ids(
+def baker_layer_weighted_ids_candidate(
     graph: nx.Graph,
     eps: float = 1.0,
-    weights: Optional[Dict[Any, float]] = None,
+    weight: str = "weight",
 ) -> Set[Any]:
     """
-    Return a Baker-style independent dominating set candidate.
+    Return a weighted Baker-style IDS candidate.
 
-    Runtime:
-        O((ceil(1/eps)+1) * (|V|+|E|)).
-        For eps=1 this is O(|V|+|E|).
+    Runtime is O((ceil(1/eps)+1)(n+m)). For eps=1.0 this is linear.
     """
     if eps <= 0:
         raise ValueError("eps must be positive.")
-
     G = _clean_graph(graph)
     if G.number_of_nodes() == 0:
         return set()
@@ -246,24 +287,30 @@ def baker_ptas_ids(
     period = max(2, int(1.0 / eps + 0.999999999) + 1)
     layers = _bfs_layers_all_components(G)
     nodes = set(G.nodes())
-
     candidates: List[Set[Any]] = []
+
     for residue in range(period):
         separator = {v for v in nodes if layers[v] % period == residue}
         kept = nodes - separator
-        cand = _one_layer_candidate(G, kept, separator, weights)
+        cand = _one_layer_candidate(G, kept, separator, weight)
         if verify_independent_dominating_set(G, cand):
             candidates.append(cand)
 
-    full_order = _weighted_bucket_order(G, nodes, weights)
-    full_cand = repair_prune(G, set(full_order), full_order)
-    if verify_independent_dominating_set(G, full_cand):
-        candidates.append(full_cand)
+    ratio_order = weighted_bucket_order(G, nodes, weight=weight, mode="coverage_per_weight")
+    cheap_order = weighted_bucket_order(G, nodes, weight=weight, mode="cheap")
+    for order in (ratio_order, cheap_order):
+        cand = repair_prune_weighted(G, set(order), order, weight=weight)
+        if verify_independent_dominating_set(G, cand):
+            candidates.append(cand)
 
     if not candidates:
-        fallback = repair_prune(G, set(G.nodes()), list(G.nodes()))
+        fallback = repair_prune_weighted(G, set(G.nodes()), list(G.nodes()), weight=weight)
         if not verify_independent_dominating_set(G, fallback):
-            raise RuntimeError("failed to construct a valid independent dominating set")
+            raise RuntimeError("failed to construct a valid weighted IDS")
         return fallback
 
-    return min(candidates, key=lambda S: (_weight_sum(S, weights), len(S)))
+    return min(candidates, key=lambda S: (solution_weight(G, S, weight), len(S)))
+
+
+# Backward-compatible alias.
+baker_ptas_ids = baker_layer_weighted_ids_candidate
