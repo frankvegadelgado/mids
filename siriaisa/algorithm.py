@@ -714,6 +714,6 @@ def find_weighted_independent_dominating_set_brute_force(
 
     return best
 
-
+find_independent_dominating_set_brute_force = find_weighted_independent_dominating_set_brute_force
 find_independent_dominating_set_approximation = find_weighted_independent_dominating_set
 calculate_solution_weight_unweighted_name = calculate_solution_weight
