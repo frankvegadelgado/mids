@@ -7,7 +7,60 @@ import networkx as nx
 
 from . import maxcut
 
-def repair_prune(G: nx.Graph, candidate: set): 
+def repair_prune(G: nx.Graph, candidate: set):
+    """
+    Repair a proposed candidate into an independent dominating set, then prune
+    redundant vertices.
+
+    Runtime: O(|V| + |E|).
+    """
+    if not isinstance(G, nx.Graph):
+        raise ValueError("G must be an undirected NetworkX Graph.")
+
+    if G.number_of_nodes() == 0:
+        return set()
+
+    candidate = set() if candidate is None else set(candidate)
+    candidate.intersection_update(G.nodes)
+
+    selected = set()
+    dominated_count = {v: 0 for v in G.nodes}
+
+    def add_vertex(v):
+        selected.add(v)
+        dominated_count[v] += 1
+        for u in G.neighbors(v):
+            dominated_count[u] += 1
+
+    # Keep as much of candidate as possible while enforcing independence.
+    for v in G.nodes:
+        if v in candidate and dominated_count[v] == 0:
+            add_vertex(v)
+
+    # Repair domination by extending to a maximal independent set.
+    for v in G.nodes:
+        if dominated_count[v] == 0:
+            add_vertex(v)
+
+    # Prune redundant selected vertices.
+    # Removing vertices cannot break independence, only domination.
+    for v in list(selected):
+        if dominated_count[v] <= 1:
+            continue
+
+        removable = True
+        for u in G.neighbors(v):
+            if dominated_count[u] <= 1:
+                removable = False
+                break
+
+        if removable:
+            selected.remove(v)
+            dominated_count[v] -= 1
+            for u in G.neighbors(v):
+                dominated_count[u] -= 1
+
+    return selected
 
 
 def max_cut_bipartite(G: nx.Graph):
