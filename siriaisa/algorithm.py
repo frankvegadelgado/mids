@@ -11,6 +11,14 @@ weight. It uses a fixed pool of linear Furones-style signals plus a
 Salvador-oriented-incidence auxiliary candidate solved by the weighted
 Baker-layer IDS routine with eps=1.0.
 
+The candidate pool and selection rule are unchanged; the implementation runs
+on flat index-based adjacency arrays (see ``baker_ids.FlatGraph``) built once
+per input. This removes NetworkX per-call overhead, graph/subgraph copies and
+redundant O(n+m) re-verifications (duplicate candidates are deduplicated, and
+candidates that are feasible by construction are not re-checked). Local-swap
+verification is done on the touched neighbourhoods only, which is exact and
+O(deg) instead of O(n+m) per probe.
+
 Guarantee: feasibility and O(|V|+|E|) time for a fixed candidate pool, assuming
 expected O(1) Python dict/set operations. This is a heuristic, not an exact
 solver and not a proved constant-approximation algorithm.
@@ -19,7 +27,6 @@ solver and not a proved constant-approximation algorithm.
 from __future__ import annotations
 
 import itertools
-from collections import defaultdict
 from typing import Any, Dict, Iterable, Iterator, List, Optional, Sequence, Set, Tuple
 
 import networkx as nx
@@ -29,8 +36,20 @@ try:
 except Exception:
     import baker_ids
 
-
 _EPS = 1.0e-12
+
+FlatGraph = baker_ids.FlatGraph
+_flat_order = baker_ids.flat_order
+_flat_bucket_order = baker_ids.flat_bucket_order
+_flat_repair_prune = baker_ids.flat_repair_prune
+_flat_verify = baker_ids.flat_verify_ids
+_flat_weight = baker_ids.flat_solution_weight
+_extend_unique = baker_ids.extend_unique
+
+
+# ---------------------------------------------------------------------------
+# Public helpers (NetworkX-facing, backward compatible)
+# ---------------------------------------------------------------------------
 
 
 def _clean_graph(graph: nx.Graph) -> nx.Graph:
@@ -58,92 +77,8 @@ def calculate_solution_weight(G: nx.Graph, solution: Iterable[Any], weight: str 
     return sum(_node_weight(G, v, weight) for v in solution)
 
 
-def _append_unique(out: List[Any], values: Iterable[Any], allowed: Set[Any]) -> None:
-    seen = set(out)
-    for v in values:
-        if v in allowed and v not in seen:
-            out.append(v)
-            seen.add(v)
-
-
-def _fixed_bucket_order_from_scores(
-    nodes: List[Any],
-    scores: Dict[Any, float],
-    bucket_count: int = 256,
-    high_to_low: bool = True,
-) -> List[Any]:
-    if not nodes:
-        return []
-    bucket_count = max(2, bucket_count)
-    lo = min(scores[v] for v in nodes)
-    hi = max(scores[v] for v in nodes)
-    if hi <= lo:
-        return list(nodes)
-
-    buckets: List[List[Any]] = [[] for _ in range(bucket_count)]
-    scale = (bucket_count - 1) / (hi - lo)
-    for v in nodes:
-        idx = int((scores[v] - lo) * scale)
-        idx = max(0, min(idx, bucket_count - 1))
-        buckets[idx].append(v)
-
-    out: List[Any] = []
-    rng = range(bucket_count - 1, -1, -1) if high_to_low else range(bucket_count)
-    for idx in rng:
-        out.extend(buckets[idx])
-    return out
-
-
-def _weighted_order(
-    G: nx.Graph,
-    allowed: Iterable[Any],
-    weight: str = "weight",
-    mode: str = "coverage_per_weight",
-    bucket_count: int = 256,
-) -> List[Any]:
-    nodes = list(allowed)
-    if not nodes:
-        return []
-
-    if mode == "coverage_per_weight":
-        scores = {v: (G.degree(v) + 1) / _ratio_denominator(G, v, weight) for v in nodes}
-        return _fixed_bucket_order_from_scores(nodes, scores, bucket_count, True)
-    if mode == "cheap":
-        scores = {v: _node_weight(G, v, weight) for v in nodes}
-        return _fixed_bucket_order_from_scores(nodes, scores, bucket_count, False)
-    if mode == "expensive":
-        scores = {v: _node_weight(G, v, weight) for v in nodes}
-        return _fixed_bucket_order_from_scores(nodes, scores, bucket_count, True)
-    if mode == "degree":
-        scores = {v: float(G.degree(v)) for v in nodes}
-        return _fixed_bucket_order_from_scores(nodes, scores, bucket_count, True)
-    if mode == "low_degree":
-        scores = {v: float(G.degree(v)) for v in nodes}
-        return _fixed_bucket_order_from_scores(nodes, scores, bucket_count, False)
-    raise ValueError(f"unknown order mode: {mode}")
-
-
 def verify_independent_dominating_set(G: nx.Graph, S: Optional[Set[Any]]) -> bool:
-    if S is None:
-        return False
-    S = set(S)
-    if not S.issubset(G.nodes):
-        return False
-
-    selected = {v: False for v in G.nodes()}
-    dominated = {v: False for v in G.nodes()}
-    for v in S:
-        selected[v] = True
-        dominated[v] = True
-
-    for u, v in G.edges():
-        if selected[u] and selected[v]:
-            return False
-        if selected[u]:
-            dominated[v] = True
-        if selected[v]:
-            dominated[u] = True
-    return all(dominated.values())
+    return baker_ids.verify_independent_dominating_set(G, S)
 
 
 def _is_dominating_set(G: nx.Graph, D: Set[Any]) -> bool:
@@ -170,503 +105,634 @@ def repair_prune_weighted(
     """
     if not isinstance(G, nx.Graph) or G.is_directed():
         raise ValueError("G must be an undirected NetworkX Graph.")
-    if G.number_of_nodes() == 0:
-        return set()
-
-    allowed = set(G.nodes())
-    sweep: List[Any] = []
-    _append_unique(sweep, list(G.nodes()) if order is None else order, allowed)
-    _append_unique(sweep, G.nodes(), allowed)
-    candidate = set() if candidate is None else set(candidate) & allowed
-
-    selected: Set[Any] = set()
-    dom_count: Dict[Any, int] = {v: 0 for v in G.nodes()}
-
-    def add(v: Any) -> None:
-        selected.add(v)
-        dom_count[v] += 1
-        for u in G.neighbors(v):
-            dom_count[u] += 1
-
-    for v in sweep:
-        if v in candidate and dom_count[v] == 0:
-            add(v)
-    for v in sweep:
-        if dom_count[v] == 0:
-            add(v)
-
-    for v in _weighted_order(G, selected, weight=weight, mode="expensive"):
-        if v not in selected or dom_count[v] <= 1:
-            continue
-        removable = True
-        for u in G.neighbors(v):
-            if dom_count[u] <= 1:
-                removable = False
-                break
-        if removable:
-            selected.remove(v)
-            dom_count[v] -= 1
-            for u in G.neighbors(v):
-                dom_count[u] -= 1
-    return selected
+    return baker_ids.repair_prune_weighted(G, candidate, order, weight)
 
 
 repair_prune = repair_prune_weighted
 
 
+# ---------------------------------------------------------------------------
+# Flat candidate machinery
+# ---------------------------------------------------------------------------
+
+
 class _Cand:
     __slots__ = ("vertices", "order", "name")
 
-    def __init__(self, vertices: Iterable[Any], order: Iterable[Any], name: str):
+    def __init__(self, vertices: Iterable[int], order: Iterable[int], name: str):
         self.vertices = set(vertices)
         self.order = list(order)
         self.name = name
 
 
-def _prune_ds_weighted(G: nx.Graph, D: Set[Any], weight: str) -> Set[Any]:
-    D = set(D) & set(G.nodes())
-    count: Dict[Any, int] = {v: 0 for v in G.nodes()}
+class _Orders:
+    """Per-component precomputed data shared by all candidate generators."""
+
+    __slots__ = ("ratio", "cheap", "degree", "natural", "denom")
+
+    def __init__(self, F: FlatGraph):
+        self.natural = list(range(F.n))
+        self.ratio = _flat_order(F, self.natural, "coverage_per_weight")
+        self.cheap = _flat_order(F, self.natural, "cheap")
+        self.degree = _flat_order(F, self.natural, "degree")
+        self.denom = baker_ids.flat_denominators(F)
+
+
+def _prune_ds_flat(F: FlatGraph, D: Set[int]) -> Set[int]:
+    """Remove redundant vertices from a dominating set, expensive first."""
+    D = set(D)
+    n = F.n
+    adj = F.adj
+    count = [0] * n
     for v in D:
-        for u in _closed(G, v):
+        count[v] += 1
+        for u in adj[v]:
             count[u] += 1
 
-    for v in _weighted_order(G, D, weight=weight, mode="expensive"):
-        if v not in D:
+    for v in _flat_bucket_order(sorted(D), F.w, 256, True):
+        if count[v] < 2:
             continue
-        if all(count[u] >= 2 for u in _closed(G, v)):
+        removable = True
+        for u in adj[v]:
+            if count[u] < 2:
+                removable = False
+                break
+        if removable:
             D.remove(v)
-            for u in _closed(G, v):
+            count[v] -= 1
+            for u in adj[v]:
                 count[u] -= 1
     return D
 
 
-def _coverage_sweep(G: nx.Graph, order: Sequence[Any], name: str, weight: str) -> _Cand:
-    dominated: Set[Any] = set()
-    chosen: List[Any] = []
-    n = G.number_of_nodes()
+def _coverage_sweep_flat(F: FlatGraph, order: Sequence[int], name: str) -> _Cand:
+    n = F.n
+    adj = F.adj
+    dominated = bytearray(n)
+    ndom = 0
+    chosen: List[int] = []
     for v in order:
-        if any(u not in dominated for u in _closed(G, v)):
-            chosen.append(v)
-            for u in _closed(G, v):
-                dominated.add(u)
-            if len(dominated) == n:
-                break
-    D = _prune_ds_weighted(G, set(chosen), weight)
+        if dominated[v]:
+            for u in adj[v]:
+                if not dominated[u]:
+                    break
+            else:
+                continue
+        chosen.append(v)
+        if not dominated[v]:
+            dominated[v] = 1
+            ndom += 1
+        for u in adj[v]:
+            if not dominated[u]:
+                dominated[u] = 1
+                ndom += 1
+        if ndom == n:
+            break
+    D = _prune_ds_flat(F, set(chosen))
     return _Cand(D, [v for v in chosen if v in D], name)
 
 
-def _dynamic_weighted_coverage(G: nx.Graph, weight: str) -> _Cand:
-    n = G.number_of_nodes()
+def _dynamic_weighted_coverage_flat(F: FlatGraph, O: _Orders) -> _Cand:
+    n = F.n
     if n == 0:
         return _Cand(set(), [], "dynamic_weighted_coverage")
+    adj = F.adj
+    denom = O.denom
 
-    gain = {v: G.degree(v) + 1 for v in G.nodes()}
-    max_score = max(gain[v] / _ratio_denominator(G, v, weight) for v in G.nodes())
+    gain = [len(adj[v]) + 1 for v in range(n)]
+    max_score = max(gain[v] / denom[v] for v in range(n))
     bucket_count = 256
-    buckets: List[List[Any]] = [[] for _ in range(bucket_count)]
+    buckets: List[List[int]] = [[] for _ in range(bucket_count)]
 
-    def bucket_index(v: Any) -> int:
+    def bucket_index(v: int) -> int:
         if max_score <= 0:
             return 0
-        score = gain[v] / _ratio_denominator(G, v, weight)
-        idx = int((score / max_score) * (bucket_count - 1))
-        return max(0, min(idx, bucket_count - 1))
+        idx = int((gain[v] / denom[v] / max_score) * (bucket_count - 1))
+        if idx < 0:
+            return 0
+        if idx > bucket_count - 1:
+            return bucket_count - 1
+        return idx
 
-    for v in G.nodes():
+    for v in range(n):
         buckets[bucket_index(v)].append(v)
 
-    undominated = set(G.nodes())
-    selected: Set[Any] = set()
-    order: List[Any] = []
+    undom = bytearray(b"\x01") * n
+    nundom = n
+    in_sel = bytearray(n)
+    order: List[int] = []
     top = bucket_count - 1
 
-    while undominated:
-        s = None
+    while nundom:
+        s = -1
         while top >= 0:
-            while buckets[top]:
-                v = buckets[top].pop()
-                if v in selected or gain[v] <= 0:
+            b = buckets[top]
+            while b:
+                v = b.pop()
+                if in_sel[v] or gain[v] <= 0:
                     continue
-                if bucket_index(v) != top:
-                    buckets[bucket_index(v)].append(v)
+                iv = bucket_index(v)
+                if iv != top:
+                    buckets[iv].append(v)
                     continue
                 s = v
                 break
-            if s is not None:
+            if s >= 0:
                 break
             top -= 1
-        if s is None:
+        if s < 0:
             break
 
-        selected.add(s)
+        in_sel[s] = 1
         order.append(s)
-        newly = [w for w in _closed(G, s) if w in undominated]
-        for w in newly:
-            undominated.remove(w)
-            for z in _closed(G, w):
-                if z in selected:
+        newly = [s] if undom[s] else []
+        for u in adj[s]:
+            if undom[u]:
+                newly.append(u)
+        for x in newly:
+            undom[x] = 0
+            nundom -= 1
+            if not in_sel[x]:
+                gain[x] -= 1
+                if gain[x] > 0:
+                    buckets[bucket_index(x)].append(x)
+            for z in adj[x]:
+                if in_sel[z]:
                     continue
                 gain[z] -= 1
                 if gain[z] > 0:
                     buckets[bucket_index(z)].append(z)
 
-    D = _prune_ds_weighted(G, set(order), weight)
+    D = _prune_ds_flat(F, set(order))
     return _Cand(D, [v for v in order if v in D], "dynamic_weighted_coverage")
 
 
-def _witness_score(G: nx.Graph, threshold: int, name: str, weight: str) -> _Cand:
-    score = {v: 0.0 for v in G.nodes()}
-    deg = dict(G.degree())
-    for w, d in deg.items():
-        if d <= threshold:
-            contribution = 1.0 / _ratio_denominator(G, w, weight)
-            score[w] += contribution
-            for v in G.neighbors(w):
-                score[v] += contribution
+def _witness_score_flat(F: FlatGraph, threshold: int, name: str, O: _Orders) -> _Cand:
+    n = F.n
+    adj = F.adj
+    denom = O.denom
+    score = [0.0] * n
+    for v in range(n):
+        if len(adj[v]) <= threshold:
+            contribution = 1.0 / denom[v]
+            score[v] += contribution
+            for u in adj[v]:
+                score[u] += contribution
 
-    order = _fixed_bucket_order_from_scores(
-        list(G.nodes()),
-        {v: score[v] / _ratio_denominator(G, v, weight) for v in G.nodes()},
-        256,
-        True,
-    )
-    _append_unique(order, _weighted_order(G, G.nodes(), weight=weight, mode="coverage_per_weight"), set(G.nodes()))
-    return _coverage_sweep(G, order, name, weight)
+    key = [score[v] / denom[v] for v in range(n)]
+    order = _flat_bucket_order(O.natural, key, 256, True)
+    _extend_unique(order, O.ratio, n)
+    return _coverage_sweep_flat(F, order, name)
 
 
-def _ownership(G: nx.Graph, mode: str, weight: str) -> _Cand:
-    nodes = list(G.nodes())
-    if not nodes:
+def _ownership_flat(F: FlatGraph, mode: str, O: _Orders) -> _Cand:
+    n = F.n
+    if n == 0:
         return _Cand(set(), [], f"ownership_{mode}")
+    adj = F.adj
+    denom = O.denom
 
-    pos = {v: i for i, v in enumerate(nodes)}
-    deg = dict(G.degree())
-    avg = (2 * G.number_of_edges()) // max(1, len(nodes))
+    avg = (2 * F.m) // max(1, n)
     threshold = max(2, avg)
-    score = {v: 0.0 for v in nodes}
+    score = [0.0] * n
+    np1 = n + 1
+    late = mode == "late"
 
-    for w in nodes:
-        if deg[w] > threshold:
+    for x in range(n):
+        dx = len(adj[x])
+        if dx > threshold:
             continue
-        owner, owner_key = None, None
-        for v in _closed(G, w):
-            if deg.get(v, 0) < deg[w]:
+        owner = -1
+        owner_key = 0.0
+        for v in itertools.chain((x,), adj[x]):
+            dv = len(adj[v])
+            if dv < dx:
                 continue
-            base = (deg.get(v, 0) + 1) / _ratio_denominator(G, v, weight)
-            tie = pos[v] if mode == "late" else -pos[v]
-            key = base * (len(nodes) + 1) + tie / max(1, len(nodes) + 1)
-            if owner is None or key > owner_key:
+            base = (dv + 1) / denom[v]
+            tie = v if late else -v
+            key = base * np1 + tie / np1
+            if owner < 0 or key > owner_key:
                 owner, owner_key = v, key
-        if owner is not None:
-            score[owner] += 1.0 / _ratio_denominator(G, w, weight)
+        if owner >= 0:
+            score[owner] += 1.0 / denom[x]
 
-    order = _fixed_bucket_order_from_scores(
-        nodes,
-        {v: score[v] / _ratio_denominator(G, v, weight) for v in nodes},
-        256,
-        True,
-    )
-    _append_unique(order, _weighted_order(G, nodes, weight=weight, mode="coverage_per_weight"), set(G.nodes()))
-    return _coverage_sweep(G, order, f"ownership_{mode}", weight)
+    key2 = [score[v] / denom[v] for v in range(n)]
+    order = _flat_bucket_order(O.natural, key2, 256, True)
+    _extend_unique(order, O.ratio, n)
+    return _coverage_sweep_flat(F, order, f"ownership_{mode}")
 
 
-def _reverse_delete(G: nx.Graph, mode: str, weight: str) -> _Cand:
-    nodes = list(G.nodes())
-    if not nodes:
+def _reverse_delete_flat(F: FlatGraph, mode: str, O: _Orders) -> _Cand:
+    n = F.n
+    if n == 0:
         return _Cand(set(), [], f"reverse_delete_{mode}")
+    adj = F.adj
 
     if mode == "input":
-        order = nodes
+        order = O.natural
     elif mode == "reverse_input":
-        order = list(reversed(nodes))
+        order = O.natural[::-1]
     elif mode == "expensive":
-        order = _weighted_order(G, nodes, weight=weight, mode="expensive")
+        order = _flat_order(F, O.natural, "expensive")
     elif mode == "cheap":
-        order = _weighted_order(G, nodes, weight=weight, mode="cheap")
+        order = O.cheap
     elif mode == "coverage_per_weight":
-        order = _weighted_order(G, nodes, weight=weight, mode="coverage_per_weight")
+        order = O.ratio
     else:
         raise ValueError(f"unknown reverse-delete mode: {mode}")
 
-    D = set(nodes)
-    count = {v: G.degree(v) + 1 for v in nodes}
+    in_d = bytearray(b"\x01") * n
+    count = [len(adj[v]) + 1 for v in range(n)]
     for v in order:
-        if v in D and all(count[u] >= 2 for u in _closed(G, v)):
-            D.remove(v)
-            for u in _closed(G, v):
+        if not in_d[v] or count[v] < 2:
+            continue
+        removable = True
+        for u in adj[v]:
+            if count[u] < 2:
+                removable = False
+                break
+        if removable:
+            in_d[v] = 0
+            count[v] -= 1
+            for u in adj[v]:
                 count[u] -= 1
-    return _Cand(D, [v for v in nodes if v in D], f"reverse_delete_{mode}")
+
+    members = [v for v in range(n) if in_d[v]]
+    return _Cand(set(members), members, f"reverse_delete_{mode}")
 
 
-def _seed_complete(G: nx.Graph, weight: str, seed_limit: int = 16, residual_passes: int = 3) -> _Cand:
-    n = G.number_of_nodes()
+def _seed_complete_flat(
+    F: FlatGraph,
+    O: _Orders,
+    seed_limit: int = 16,
+    residual_passes: int = 3,
+) -> _Cand:
+    n = F.n
     if n == 0:
         return _Cand(set(), [], "seed_complete")
+    adj = F.adj
+    denom = O.denom
 
-    seed_order = _weighted_order(G, G.nodes(), weight=weight, mode="coverage_per_weight")
-    fallback_order = _weighted_order(G, G.nodes(), weight=weight, mode="cheap")
-    ratio_order = seed_order
-    best: Optional[Set[Any]] = None
-    best_order: List[Any] = []
+    seed_order = O.ratio
+    fallback_order = O.cheap
+    # Exact upper bound on any residual score of v: (deg(v)+1)/w(v).
+    bound = [(len(adj[v]) + 1) / denom[v] for v in range(n)]
+
+    best: Optional[Set[int]] = None
+    best_w = float("inf")
+    best_order: List[int] = []
 
     for seed in seed_order[:seed_limit]:
-        D: Set[Any] = {seed}
-        order = [seed]
-        dominated = set(_closed(G, seed))
+        in_d = bytearray(n)
+        order: List[int] = [seed]
+        in_d[seed] = 1
+        dom = bytearray(n)
+        ndom = 1
+        dom[seed] = 1
+        for u in adj[seed]:
+            if not dom[u]:
+                dom[u] = 1
+                ndom += 1
 
         passes = residual_passes
-        while len(dominated) < n and passes > 0:
+        while ndom < n and passes > 0:
             passes -= 1
-            best_v, best_score, best_gain = None, -1.0, 0
-            for v in G.nodes():
-                if v in D:
+            best_v, best_score, best_gain = -1, -1.0, 0
+            for v in range(n):
+                if in_d[v] or bound[v] <= best_score:
                     continue
-                gain = sum(1 for u in _closed(G, v) if u not in dominated)
-                score = gain / _ratio_denominator(G, v, weight)
+                gain = 0 if dom[v] else 1
+                for u in adj[v]:
+                    if not dom[u]:
+                        gain += 1
+                score = gain / denom[v]
                 if score > best_score:
                     best_v, best_score, best_gain = v, score, gain
-            if best_v is None or best_gain <= 0:
+            if best_v < 0 or best_gain <= 0:
                 break
-            D.add(best_v)
+            in_d[best_v] = 1
             order.append(best_v)
-            for u in _closed(G, best_v):
-                dominated.add(u)
+            if not dom[best_v]:
+                dom[best_v] = 1
+                ndom += 1
+            for u in adj[best_v]:
+                if not dom[u]:
+                    dom[u] = 1
+                    ndom += 1
 
-        if len(dominated) < n:
-            for v in ratio_order:
-                if v not in D and any(u not in dominated for u in _closed(G, v)):
-                    D.add(v)
-                    order.append(v)
-                    for u in _closed(G, v):
-                        dominated.add(u)
-                    if len(dominated) == n:
-                        break
-            for v in fallback_order:
-                if len(dominated) == n:
+        if ndom < n:
+            for sweep in (seed_order, fallback_order):
+                if ndom == n:
                     break
-                if v not in D and any(u not in dominated for u in _closed(G, v)):
-                    D.add(v)
-                    order.append(v)
-                    for u in _closed(G, v):
-                        dominated.add(u)
+                for v in sweep:
+                    if ndom == n:
+                        break
+                    if in_d[v]:
+                        continue
+                    if not dom[v]:
+                        covers = True
+                    else:
+                        covers = False
+                        for u in adj[v]:
+                            if not dom[u]:
+                                covers = True
+                                break
+                    if covers:
+                        in_d[v] = 1
+                        order.append(v)
+                        if not dom[v]:
+                            dom[v] = 1
+                            ndom += 1
+                        for u in adj[v]:
+                            if not dom[u]:
+                                dom[u] = 1
+                                ndom += 1
 
-        D = _prune_ds_weighted(G, D, weight)
-        if _is_dominating_set(G, D):
-            if best is None or calculate_solution_weight(G, D, weight) < calculate_solution_weight(G, best, weight):
-                best, best_order = D, [v for v in order if v in D]
+        D = _prune_ds_flat(F, {v for v in order})
+        if ndom == n:
+            w = _flat_weight(F, D)
+            if w < best_w:
+                best, best_w = D, w
+                best_order = [v for v in order if v in D]
 
     return _Cand(best or set(), best_order, "seed_complete")
 
 
-def _build_salvador_aux(G: nx.Graph, weight: str) -> nx.Graph:
-    """
-    Build a linear-size oriented-incidence auxiliary graph.
+def _salvador_baker_flat(F: FlatGraph, O: _Orders) -> _Cand:
+    name = "salvador_baker_weighted_ids"
+    n = F.n
+    if n == 0:
+        return _Cand(set(), [], name)
+    if F.m == 0:
+        return _Cand(set(range(n)), O.cheap, name)
 
-    Each original incidence (u,v) gets node ("inc",u,v). Its auxiliary weight
-    is w(u)/max(1,deg(u)).
-    """
-    B = nx.Graph()
-    W = G.copy()
-    deg = dict(G.degree())
+    adj = F.adj
+    w = F.w
 
-    for u in list(G.nodes()):
-        if u not in W:
-            continue
-        nbrs = list(W.neighbors(u))
-        W.remove_node(u)
-        first, prev = None, None
+    # Linear-size oriented-incidence auxiliary graph, built directly as flat
+    # arrays (no NetworkX construction, no graph copy). Each original
+    # incidence (u,v) gets one auxiliary node with weight w(u)/max(1,deg(u)).
+    removed = bytearray(n)
+    aux_adj: List[List[int]] = []
+    aux_w: List[float] = []
+    aux_src: List[int] = []
 
+    for u in range(n):
+        nbrs = [v for v in adj[u] if not removed[v]]
+        removed[u] = 1
+        first = -1
+        prev = -1
+        wu = w[u] / max(1, len(adj[u]))
         for v in nbrs:
-            x_uv = ("inc", u, v)
-            x_vu = ("inc", v, u)
-            B.add_node(x_uv, weight=_node_weight(G, u, weight) / max(1, deg.get(u, 1)))
-            B.add_node(x_vu, weight=_node_weight(G, v, weight) / max(1, deg.get(v, 1)))
-            B.add_edge(x_uv, x_vu)
-            if prev is None:
-                first = x_uv
+            a = len(aux_adj)
+            aux_adj.append([])
+            aux_w.append(wu)
+            aux_src.append(u)
+            b = len(aux_adj)
+            aux_adj.append([])
+            aux_w.append(w[v] / max(1, len(adj[v])))
+            aux_src.append(v)
+            aux_adj[a].append(b)
+            aux_adj[b].append(a)
+            if prev < 0:
+                first = a
             else:
-                B.add_edge(x_uv, prev)
-            prev = x_vu
+                aux_adj[a].append(prev)
+                aux_adj[prev].append(a)
+            prev = b
+        if len(nbrs) > 1:
+            aux_adj[first].append(prev)
+            aux_adj[prev].append(first)
 
-        if len(nbrs) > 1 and first is not None and prev is not None:
-            B.add_edge(first, prev)
+    auxF = FlatGraph(aux_adj, aux_w)
+    aux_cand = baker_ids.flat_baker_candidate(auxF, eps=1.0)
+    aux_order = _flat_order(auxF, list(range(auxF.n)), "coverage_per_weight")
 
-    return B
-
-
-def _salvador_baker_weighted_ids(G: nx.Graph, weight: str) -> _Cand:
-    if G.number_of_nodes() == 0:
-        return _Cand(set(), [], "salvador_baker_weighted_ids")
-    if G.number_of_edges() == 0:
-        nodes = set(G.nodes())
-        return _Cand(nodes, _weighted_order(G, nodes, weight=weight, mode="cheap"), "salvador_baker_weighted_ids")
-
-    B = _build_salvador_aux(G, weight)
-    if B.number_of_nodes() == 0:
-        return _Cand(set(), [], "salvador_baker_weighted_ids")
-
-    aux = baker_ids.baker_layer_weighted_ids_candidate(B, eps=1.0, weight="weight")
-    aux_order = baker_ids.weighted_bucket_order(B, B.nodes(), weight="weight", mode="coverage_per_weight")
-
-    order: List[Any] = []
-    seen: Set[Any] = set()
-
-    def decode(x: Any) -> None:
-        if isinstance(x, tuple) and len(x) == 3 and x[0] == "inc":
-            v = x[1]
-            if v in G and v not in seen:
-                order.append(v)
-                seen.add(v)
-
-    for x in aux:
-        decode(x)
+    order: List[int] = []
+    seen = bytearray(n)
+    for x in sorted(aux_cand):
+        v = aux_src[x]
+        if not seen[v]:
+            seen[v] = 1
+            order.append(v)
     for x in aux_order:
-        decode(x)
+        v = aux_src[x]
+        if not seen[v]:
+            seen[v] = 1
+            order.append(v)
+    _extend_unique(order, O.ratio, n)
 
-    _append_unique(order, _weighted_order(G, G.nodes(), weight=weight, mode="coverage_per_weight"), set(G.nodes()))
-
-    D = set(order)
-    if _is_dominating_set(G, D):
-        D = _prune_ds_weighted(G, D, weight)
-        order = [v for v in order if v in D]
-
-    return _Cand(D, order, "salvador_baker_weighted_ids")
+    D = _prune_ds_flat(F, set(order))
+    return _Cand(D, [v for v in order if v in D], name)
 
 
-def _ds_candidates(G: nx.Graph, weight: str) -> Iterator[_Cand]:
-    nodes = set(G.nodes())
-    avg = (2 * G.number_of_edges()) // max(1, G.number_of_nodes())
+def _ds_candidates_flat(F: FlatGraph, O: _Orders) -> Iterator[_Cand]:
+    avg = (2 * F.m) // max(1, F.n)
 
-    yield _coverage_sweep(G, _weighted_order(G, nodes, weight=weight, mode="coverage_per_weight"), "ratio_sweep", weight)
-    yield _coverage_sweep(G, _weighted_order(G, nodes, weight=weight, mode="cheap"), "cheap_sweep", weight)
-    yield _coverage_sweep(G, _weighted_order(G, nodes, weight=weight, mode="degree"), "degree_sweep", weight)
-    yield _dynamic_weighted_coverage(G, weight)
-    yield _witness_score(G, 2, "low_witness", weight)
-    yield _witness_score(G, max(2, avg), "medium_witness", weight)
-    yield _ownership(G, "late", weight)
-    yield _ownership(G, "early", weight)
-    yield _seed_complete(G, weight)
-    yield _salvador_baker_weighted_ids(G, weight)
-    yield _reverse_delete(G, "input", weight)
-    yield _reverse_delete(G, "reverse_input", weight)
-    yield _reverse_delete(G, "expensive", weight)
-    yield _reverse_delete(G, "cheap", weight)
-    yield _reverse_delete(G, "coverage_per_weight", weight)
+    yield _coverage_sweep_flat(F, O.ratio, "ratio_sweep")
+    yield _coverage_sweep_flat(F, O.cheap, "cheap_sweep")
+    yield _coverage_sweep_flat(F, O.degree, "degree_sweep")
+    yield _dynamic_weighted_coverage_flat(F, O)
+    yield _witness_score_flat(F, 2, "low_witness", O)
+    yield _witness_score_flat(F, max(2, avg), "medium_witness", O)
+    yield _ownership_flat(F, "late", O)
+    yield _ownership_flat(F, "early", O)
+    yield _seed_complete_flat(F, O)
+    yield _salvador_baker_flat(F, O)
+    yield _reverse_delete_flat(F, "input", O)
+    yield _reverse_delete_flat(F, "reverse_input", O)
+    yield _reverse_delete_flat(F, "expensive", O)
+    yield _reverse_delete_flat(F, "cheap", O)
+    yield _reverse_delete_flat(F, "coverage_per_weight", O)
 
 
-def _priority_order(primary: Iterable[Any], secondary: Iterable[Any], G: nx.Graph) -> List[Any]:
-    out: List[Any] = []
-    allowed = set(G.nodes())
-    _append_unique(out, primary, allowed)
-    _append_unique(out, secondary, allowed)
-    _append_unique(out, G.nodes(), allowed)
+def _priority_order(primary: Iterable[int], secondary: Iterable[int], n: int) -> List[int]:
+    out: List[int] = []
+    seen = bytearray(n)
+    for src in (primary, secondary, range(n)):
+        for v in src:
+            if not seen[v]:
+                seen[v] = 1
+                out.append(v)
     return out
 
 
-def _ids_from_ds(G: nx.Graph, c: _Cand, ratio: List[Any], cheap: List[Any], weight: str) -> Iterator[Set[Any]]:
-    D = set(c.vertices) & set(G.nodes())
+def _ids_from_ds_flat(F: FlatGraph, c: _Cand, O: _Orders) -> Iterator[Tuple[Set[int], bool]]:
+    """Yield (candidate, feasible_by_construction) pairs from a DS candidate."""
+    D = c.vertices
     if not D:
         return
-    if verify_independent_dominating_set(G, D):
-        yield D
+    n = F.n
+    if _flat_verify(F, D):
+        yield set(D), True
 
-    yield repair_prune_weighted(G, D, _priority_order(c.order, cheap, G), weight)
-    yield repair_prune_weighted(G, D, _priority_order(reversed(c.order), cheap, G), weight)
-    yield repair_prune_weighted(G, D, _priority_order((v for v in cheap if v in D), cheap, G), weight)
-    yield repair_prune_weighted(G, D, _priority_order((v for v in ratio if v in D), ratio, G), weight)
+    cheap = O.cheap
+    ratio = O.ratio
+    yield _flat_repair_prune(F, D, _priority_order(c.order, cheap, n)), True
+    yield _flat_repair_prune(F, D, _priority_order(reversed(c.order), cheap, n)), True
+    yield _flat_repair_prune(F, D, _priority_order((v for v in cheap if v in D), cheap, n)), True
+    yield _flat_repair_prune(F, D, _priority_order((v for v in ratio if v in D), ratio, n)), True
 
 
-def _weighted_absorb_once(G: nx.Graph, S: Set[Any], probe_order: Sequence[Any], weight: str) -> Set[Any]:
+def _weighted_absorb_once_flat(
+    F: FlatGraph,
+    S: Set[int],
+    probe_order: Sequence[int],
+) -> Set[int]:
     """
     One safe weighted IDS swap pass.
 
     For each constant-many probe vertex u, try adding u and removing selected
-    neighbours of u when the total weight decreases. The candidate is accepted
-    only after a full linear verification. Because the probe list is capped by
-    a fixed constant in _best_component, this remains O(n+m).
+    neighbours of u when the total weight decreases. Feasibility of a swap is
+    checked exactly on the touched closed neighbourhoods only (O(deg) per
+    probe instead of a full O(n+m) re-verification). Because the probe list
+    is capped by a fixed constant in _best_component, this remains O(n+m).
     """
+    n = F.n
+    adj = F.adj
+    w = F.w
+
     best = set(S)
-    best_w = calculate_solution_weight(G, best, weight)
+    in_best = bytearray(n)
+    dom = [0] * n
+    for v in best:
+        in_best[v] = 1
+        dom[v] += 1
+        for u in adj[v]:
+            dom[u] += 1
 
     for u in probe_order:
-        if u in best:
+        if in_best[u]:
             continue
-
-        R = {r for r in G.neighbors(u) if r in best}
+        R = [r for r in adj[u] if in_best[r]]
         if not R:
             continue
 
-        cand = set(best)
-        cand.difference_update(R)
-
-        if any(v in cand for v in G.neighbors(u)):
+        delta = w[u]
+        for r in R:
+            delta -= w[r]
+        if delta >= -_EPS:
             continue
 
-        cand.add(u)
-        cand_w = calculate_solution_weight(G, cand, weight)
-        if cand_w + _EPS >= best_w:
+        # Exact local domination check on touched vertices.
+        touched: Dict[int, int] = {}
+        for r in R:
+            touched[r] = touched.get(r, 0) - 1
+            for x in adj[r]:
+                touched[x] = touched.get(x, 0) - 1
+        touched[u] = touched.get(u, 0) + 1
+        for x in adj[u]:
+            touched[x] = touched.get(x, 0) + 1
+
+        feasible = True
+        for x, d in touched.items():
+            if dom[x] + d < 1:
+                feasible = False
+                break
+        if not feasible:
             continue
 
-        if verify_independent_dominating_set(G, cand):
-            best = cand
-            best_w = cand_w
+        for r in R:
+            in_best[r] = 0
+            best.remove(r)
+        in_best[u] = 1
+        best.add(u)
+        for x, d in touched.items():
+            dom[x] += d
 
     return best
 
 
-def _pool(G: nx.Graph, weight: str) -> Iterator[Set[Any]]:
-    nodes = set(G.nodes())
-    ratio = _weighted_order(G, nodes, weight=weight, mode="coverage_per_weight")
-    cheap = _weighted_order(G, nodes, weight=weight, mode="cheap")
-    degree = _weighted_order(G, nodes, weight=weight, mode="degree")
-    natural = list(G.nodes())
+def _pool_flat(F: FlatGraph, O: _Orders) -> Iterator[Tuple[Set[int], bool]]:
+    n = F.n
+    natural = O.natural
 
-    for order in (ratio, cheap, degree, natural, list(reversed(natural))):
-        yield repair_prune_weighted(G, set(order), order, weight)
+    for order in (O.ratio, O.cheap, O.degree, natural, natural[::-1]):
+        yield _flat_repair_prune(F, set(order), order), True
 
-    ds_list = list(_ds_candidates(G, weight))
+    ds_list = list(_ds_candidates_flat(F, O))
     for c in ds_list:
-        yield from _ids_from_ds(G, c, ratio, cheap, weight)
+        yield from _ids_from_ds_flat(F, c, O)
 
-    probes: List[Any] = []
-    _append_unique(probes, cheap[:16], nodes)
-    _append_unique(probes, ratio[:16], nodes)
+    probes: List[int] = []
+    _extend_unique(probes, O.cheap[:16], n)
+    _extend_unique(probes, O.ratio[:16], n)
     for c in ds_list:
-        _append_unique(probes, c.order[:8], nodes)
+        _extend_unique(probes, c.order[:8], n)
         if len(probes) >= 64:
             break
 
     for seed in probes[:64]:
-        yield repair_prune_weighted(G, {seed}, _priority_order([seed], cheap, G), weight)
-        yield repair_prune_weighted(G, {seed}, _priority_order([seed], ratio, G), weight)
+        yield _flat_repair_prune(F, {seed}, _priority_order([seed], O.cheap, n)), True
+        yield _flat_repair_prune(F, {seed}, _priority_order([seed], O.ratio, n)), True
 
 
-def _best_component(G: nx.Graph, weight: str) -> Set[Any]:
-    ratio = _weighted_order(G, G.nodes(), weight=weight, mode="coverage_per_weight")
-    cheap = _weighted_order(G, G.nodes(), weight=weight, mode="cheap")
+def _best_component_flat(F: FlatGraph) -> Set[int]:
+    n = F.n
+    O = _Orders(F)
+    w = F.w
 
-    probes: List[Any] = []
-    _append_unique(probes, cheap[:32], set(G.nodes()))
-    _append_unique(probes, ratio[:32], set(G.nodes()))
+    probes: List[int] = []
+    _extend_unique(probes, O.cheap[:32], n)
+    _extend_unique(probes, O.ratio[:32], n)
+    probes = probes[:64]
 
-    best: Optional[Set[Any]] = None
-    for cand in _pool(G, weight):
-        if not verify_independent_dominating_set(G, cand):
+    best: Optional[Set[int]] = None
+    best_w = float("inf")
+    seen_cands: Set[frozenset] = set()
+
+    for cand, feasible in _pool_flat(F, O):
+        key = frozenset(cand)
+        if key in seen_cands:
+            continue
+        seen_cands.add(key)
+        if not feasible and not _flat_verify(F, cand):
             continue
 
-        improved = _weighted_absorb_once(G, cand, probes[:64], weight)
+        improved = _weighted_absorb_once_flat(F, cand, probes)
         for opt in (cand, improved):
-            if not verify_independent_dominating_set(G, opt):
-                continue
-            if best is None or calculate_solution_weight(G, opt, weight) < calculate_solution_weight(G, best, weight):
-                best = set(opt)
+            opt_w = sum(w[v] for v in opt)
+            if opt_w < best_w:
+                best, best_w = set(opt), opt_w
+            if improved is cand or improved == cand:
+                break
 
     if best is None:
-        best = repair_prune_weighted(G, set(G.nodes()), list(G.nodes()), weight)
-        if not verify_independent_dominating_set(G, best):
+        best = _flat_repair_prune(F, set(range(n)), list(range(n)))
+        if not _flat_verify(F, best):
             raise RuntimeError("failed to construct a valid weighted IDS")
 
     return best
+
+
+def _flat_components(F: FlatGraph) -> List[List[int]]:
+    """Connected components as index lists in global node order; O(n+m)."""
+    n = F.n
+    adj = F.adj
+    comp_id = [-1] * n
+    cid = 0
+    stack: List[int] = []
+    for root in range(n):
+        if comp_id[root] >= 0:
+            continue
+        comp_id[root] = cid
+        stack.append(root)
+        while stack:
+            v = stack.pop()
+            for u in adj[v]:
+                if comp_id[u] < 0:
+                    comp_id[u] = cid
+                    stack.append(u)
+        cid += 1
+    comps: List[List[int]] = [[] for _ in range(cid)]
+    for v in range(n):
+        comps[comp_id[v]].append(v)
+    return comps
+
+
+# ---------------------------------------------------------------------------
+# Public solvers
+# ---------------------------------------------------------------------------
 
 
 def find_weighted_independent_dominating_set(graph: nx.Graph, weight: str = "weight") -> Set[Any]:
@@ -675,15 +741,24 @@ def find_weighted_independent_dominating_set(graph: nx.Graph, weight: str = "wei
     if G.number_of_nodes() == 0:
         return set()
 
-    solution: Set[Any] = set()
-    for comp in nx.connected_components(G):
-        H = G.subgraph(comp).copy()
-        solution.update(_best_component(H, weight))
+    F, labels, _ = baker_ids.flat_from_nx(G, weight)
+    comps = _flat_components(F)
 
-    if not verify_independent_dominating_set(G, solution):
+    solution_idx: Set[int] = set()
+    if len(comps) == 1:
+        solution_idx = _best_component_flat(F)
+    else:
+        for comp in comps:
+            local = {v: i for i, v in enumerate(comp)}
+            adj_c = [[local[u] for u in F.adj[v]] for v in comp]
+            w_c = [F.w[v] for v in comp]
+            sol = _best_component_flat(FlatGraph(adj_c, w_c))
+            solution_idx.update(comp[i] for i in sol)
+
+    if not _flat_verify(F, solution_idx):
         raise RuntimeError("internal error: invalid independent dominating set")
 
-    return solution
+    return {labels[v] for v in solution_idx}
 
 
 def find_independent_dominating_set(graph: nx.Graph) -> Set[Any]:
