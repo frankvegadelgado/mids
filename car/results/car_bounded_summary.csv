@@ -1,0 +1,24 @@
+family,source,reference,instances,n_range,max_Delta,s_zero,exact,c13_optimal,c18_optimal,max_ratio_upper,mean_ratio_upper,siriaisa_seconds
+regular_B4,"NP-hard within delta*B (Chlebik--Chlebikova), s(G) = 0","LB / MILP",2,256-256,4,2,0,0,0,1.134615,1.134615,11.243743
+regular_bipartite_B4,"NP-hard within delta*B (Chlebik--Chlebikova), s(G) = 0, bipartite","LB / MILP",2,256-256,4,2,0,0,0,1.115385,1.105769,12.142947
+planted_code_B4,"NP-hard within delta*B (Chlebik--Chlebikova), s(G) = 0, planted optimum","planted perfect code",2,260-260,4,2,2,2,2,1.000000,1.000000,0.884808
+scids_B4,"SC-IDS reduction, degree B, s(G) = 0","SC-IDS i = sc + |S|",2,323-323,4,2,2,0,2,1.000000,1.000000,13.693971
+vcids_B4,"VC-IDS reduction, degree B, s(G) = 0","VC-IDS i = tau + 2 m_H",2,260-260,4,2,2,0,2,1.000000,1.000000,15.042018
+regular_B8,"NP-hard within delta*B (Chlebik--Chlebikova), s(G) = 0","LB / MILP",2,256-256,8,2,0,0,0,1.379310,1.362069,5.147373
+regular_bipartite_B8,"NP-hard within delta*B (Chlebik--Chlebikova), s(G) = 0, bipartite","LB / MILP",2,256-256,8,2,0,0,0,1.344828,1.344828,5.255685
+planted_code_B8,"NP-hard within delta*B (Chlebik--Chlebikova), s(G) = 0, planted optimum","planted perfect code",2,261-261,8,2,2,2,2,1.000000,1.000000,0.461935
+scids_B8,"SC-IDS reduction, degree B, s(G) = 0","SC-IDS i = sc + |S|",2,331-334,8,2,2,0,2,1.000000,1.000000,10.674087
+vcids_B8,"VC-IDS reduction, degree B, s(G) = 0","VC-IDS i = tau + 2 m_H",2,250-250,8,2,2,0,2,1.000000,1.000000,15.534055
+regular_B16,"NP-hard within delta*B (Chlebik--Chlebikova), s(G) = 0","LB / MILP",2,256-256,16,2,0,0,0,1.562500,1.531250,3.286358
+regular_bipartite_B16,"NP-hard within delta*B (Chlebik--Chlebikova), s(G) = 0, bipartite","LB / MILP",2,256-256,16,2,0,0,0,1.562500,1.562500,4.445591
+planted_code_B16,"NP-hard within delta*B (Chlebik--Chlebikova), s(G) = 0, planted optimum","planted perfect code",2,272-272,16,2,2,2,2,1.000000,1.000000,0.596677
+scids_B16,"SC-IDS reduction, degree B, s(G) = 0","SC-IDS i = sc + |S|",2,318-321,16,2,2,0,0,1.011494,1.011429,9.663547
+vcids_B16,"VC-IDS reduction, degree B, s(G) = 0","VC-IDS i = tau + 2 m_H",2,882-882,16,2,2,0,1,1.003289,1.001645,20.376717
+regular_B32,"NP-hard within delta*B (Chlebik--Chlebikova), s(G) = 0","LB / MILP",2,1024-1024,32,2,0,0,0,2.218750,2.218750,6.012697
+regular_bipartite_B32,"NP-hard within delta*B (Chlebik--Chlebikova), s(G) = 0, bipartite","LB / MILP",2,1024-1024,32,2,0,0,0,2.250000,2.250000,4.299907
+planted_code_B32,"NP-hard within delta*B (Chlebik--Chlebikova), s(G) = 0, planted optimum","planted perfect code",2,1056-1056,32,2,2,2,2,1.000000,1.000000,1.474191
+scids_B32,"SC-IDS reduction, degree B, s(G) = 0","SC-IDS i = sc + |S|",2,1313-1313,32,2,0,0,0,1.056213,1.053254,6.842713
+vcids_B32,"VC-IDS reduction, degree B, s(G) = 0","VC-IDS i = tau + 2 m_H",2,3298-3298,32,2,2,0,0,1.000893,1.000893,13.624104
+kr_bounded_s4,"UG-hard vertex cover (Khot--Regev), degree <= 3s, s(G) = 0","LB / MILP",2,160-160,12,2,2,0,1,1.036364,1.018182,12.255653
+kr_bounded_s8,"UG-hard vertex cover (Khot--Regev), degree <= 3s, s(G) = 0","LB / MILP",2,608-608,24,2,1,0,0,1.094937,1.050499,12.367483
+ALL,"","",44,160-3298,32,44,25,8,18,2.250000,1.211167,185.326261

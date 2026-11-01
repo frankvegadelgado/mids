@@ -1,0 +1,31 @@
+family,source,instances,n_range,max_Delta,s_zero,max_s,max_s_over_n,max_s_over_n32,s_le_i,S0_independent,exact,c13_optimal,c18_optimal,max_c18_ratio,siriaisa_seconds
+barabasi_albert,"random",4,100-400,67,0,19,0.130000,0.013000,4,0,4,0,2,1.053191,17.781589
+complete,"structured",4,100-400,399,0,7600,19.000000,0.950000,0,0,4,4,4,1.000000,2.081370
+complete_bipartite_1to3,"structured",4,100-400,300,0,2600,6.500000,0.325000,0,2,4,4,4,1.000000,9.368291
+complete_bipartite_bal,"structured",4,100-400,200,0,3600,9.000000,0.450000,0,4,3,3,3,100.000000,9.493547
+complete_multipartite_4,"structured",4,100-400,300,0,5600,14.000000,0.700000,0,0,4,4,4,1.000000,10.667237
+complete_multipartite_rand,"structured",4,100-400,392,0,5889,14.722500,0.736125,0,0,4,0,4,1.000000,7.471003
+crown,"structured",4,100-400,199,0,3600,9.000000,0.450000,0,0,4,0,4,1.000000,1.103036
+cubic_bipartite,"NP-complete (cubic planar bipartite)",4,100-400,3,4,0,0.000000,0.000000,4,4,2,0,2,1.078431,19.100170
+double_star,"structured",4,100-400,200,0,18,0.080000,0.008000,4,0,4,4,4,1.000000,11.826934
+gnp_dense,"general graphs (n^(1-eps) hardness)",4,100-400,230,0,3783,9.457500,0.472875,0,0,2,0,2,2.500000,10.005520
+gnp_sparse,"random",4,100-400,11,4,0,0.000000,0.000000,4,4,4,0,3,1.007519,29.399448
+grid,"structured",4,100-400,4,4,0,0.000000,0.000000,4,4,2,0,2,1.081395,24.924078
+hypercube,"structured",2,128-512,9,2,0,0.000000,0.000000,2,2,1,1,1,1.230769,5.071560
+kr,"UG-hard vertex cover (Khot--Regev)",2,640-640,64,0,323,0.504687,0.019950,0,0,0,0,0,15.900000,7.217113
+kr_bounded,"UG-hard bounded degree (Austrin--Khot--Safra setting)",4,160-320,24,2,39,0.121875,0.006813,4,2,4,0,1,1.036145,19.171624
+planar_delaunay,"NP-hard (planar)",4,100-400,12,4,0,0.000000,0.000000,4,4,4,0,3,1.016129,18.619345
+powerlaw_bipartite,"random",4,100-400,55,0,6,0.040000,0.004000,4,1,4,0,4,1.000000,23.624241
+regular_bipartite_d4,"NP-hard to approximate (bounded-degree bipartite)",4,100-400,4,4,0,0.000000,0.000000,4,4,2,0,2,1.148148,19.814857
+regular_bipartite_d5,"NP-hard to approximate (bounded-degree bipartite)",4,100-400,5,4,0,0.000000,0.000000,4,4,2,0,2,1.205882,17.769074
+regular_d4,"NP-hard to approximate (bounded degree)",4,100-400,4,4,0,0.000000,0.000000,4,4,2,0,2,1.148148,20.559275
+regular_d5,"NP-hard to approximate (bounded degree)",4,100-400,5,4,0,0.000000,0.000000,4,4,2,0,2,1.223881,18.537383
+regular_d6,"NP-hard to approximate (bounded degree)",4,100-400,6,4,0,0.000000,0.000000,4,4,2,0,2,1.258621,17.818595
+scids_B4,"SC-IDS reduction (bipartite, degree B)",4,94-375,4,4,0,0.000000,0.000000,4,4,4,0,3,1.008000,21.905698
+scids_B6,"SC-IDS reduction (bipartite, degree B)",4,93-384,6,4,0,0.000000,0.000000,4,4,4,0,4,1.000000,19.319658
+split,"structured",4,100-400,232,0,209,0.550000,0.055000,0,0,4,0,4,1.000000,4.518487
+star,"structured",4,100-400,399,0,19,0.090000,0.009000,0,4,4,4,4,1.000000,0.076575
+vcids_cubic,"VC-IDS reduction (degree 3)",4,240-1000,3,4,0,0.000000,0.000000,4,4,2,0,2,1.440000,34.571422
+vcids_kr,"VC-IDS of Khot--Regev (UGC)",2,49096-51550,64,2,0,0.000000,0.000000,2,2,0,0,0,22.182540,63.953132
+wheel,"structured",4,100-400,399,0,19,0.090000,0.009000,0,4,4,4,4,1.000000,0.152338
+ALL,"",110,93-51550,399,54,7600,19.000000,0.950000,68,69,86,28,78,100.000000,465.922598

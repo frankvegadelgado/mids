@@ -1,0 +1,111 @@
+family,source,name,n,m,Delta,k,B,s,bound_ii,s_Kn,s_over_n,s_over_n32,H_nodes,H_max_degree,best_S0,any_S0_independent,c13,c18,lower,upper,exact,ip_status,c13_optimal,c18_optimal,s_le_i,theorem_bound,siriaisa_seconds
+cubic_bipartite,"NP-complete (cubic planar bipartite)",cubic_bipartite_n100_r0,100,145,3,10,0,0,0.000000,900,0.000000,0.000000,100,3,30,True,30,28,28,28,True,optimal,False,True,True,280,1.104922
+planar_delaunay,"NP-hard (planar)",planar_delaunay_n100_r0,100,284,9,10,0,0,0.000000,900,0.000000,0.000000,100,9,19,True,19,17,17,17,True,optimal,False,True,True,170,2.912278
+regular_d4,"NP-hard to approximate (bounded degree)",regular_d4_n100_r0,100,200,4,10,0,0,0.000000,900,0.000000,0.000000,100,4,27,True,27,23,23,23,True,optimal,False,True,True,230,3.148459
+regular_d5,"NP-hard to approximate (bounded degree)",regular_d5_n100_r0,100,250,5,10,0,0,0.000000,900,0.000000,0.000000,100,5,22,True,22,20,20,20,True,optimal,False,True,True,200,2.144123
+regular_d6,"NP-hard to approximate (bounded degree)",regular_d6_n100_r0,100,300,6,10,0,0,0.000000,900,0.000000,0.000000,100,6,20,True,20,18,18,18,True,optimal,False,True,True,180,2.203271
+regular_bipartite_d4,"NP-hard to approximate (bounded-degree bipartite)",regular_bipartite_d4_n100_r0,100,194,4,10,0,0,0.000000,900,0.000000,0.000000,100,4,25,True,25,23,23,23,True,optimal,False,True,True,230,2.403788
+regular_bipartite_d5,"NP-hard to approximate (bounded-degree bipartite)",regular_bipartite_d5_n100_r0,100,239,5,10,0,0,0.000000,900,0.000000,0.000000,100,5,22,True,22,20,20,20,True,optimal,False,True,True,200,2.962273
+scids_B4,"SC-IDS reduction (bipartite, degree B)",scids_B4_n100_r0,94,125,4,9,0,0,0.000000,940,0.000000,0.000000,94,4,34,True,34,32,32,32,True,optimal,False,True,True,288,0.888738
+scids_B6,"SC-IDS reduction (bipartite, degree B)",scids_B6_n100_r0,93,166,6,9,0,0,0.000000,930,0.000000,0.000000,93,6,32,True,32,29,29,29,True,optimal,False,True,True,261,1.163888
+vcids_cubic,"VC-IDS reduction (degree 3)",vcids_cubic_n100_r0,240,288,3,15,0,0,0.000000,3600,0.000000,0.000000,240,3,88,True,88,85,85,85,True,optimal,False,True,True,1275,7.844647
+gnp_dense,"general graphs (n^(1-eps) hardness)",gnp_dense_n100_r0,100,2486,63,10,100,441,487.200000,900,4.410000,0.441000,541,10,56,False,6,4,4,4,True,optimal,False,True,False,4450,1.126554
+complete,"structured",complete_n100_r0,100,4950,99,10,100,900,980.000000,900,9.000000,0.900000,1000,10,77,False,1,1,1,1,True,optimal,True,True,False,9010,0.046031
+complete_bipartite_bal,"structured",complete_bipartite_bal_n100_r0,100,2500,50,10,100,400,490.000000,900,4.000000,0.400000,500,10,50,True,50,50,50,50,True,optimal,True,True,False,4500,1.657876
+complete_bipartite_1to3,"structured",complete_bipartite_1to3_n100_r0,100,1875,75,10,100,325,365.000000,900,3.250000,0.325000,425,10,30,False,25,25,25,25,True,optimal,True,True,False,3500,1.807501
+complete_multipartite_4,"structured",complete_multipartite_4_n100_r0,100,3750,75,10,100,700,740.000000,900,7.000000,0.700000,800,10,85,False,25,25,25,25,True,optimal,True,True,False,7250,1.133353
+complete_multipartite_rand,"structured",complete_multipartite_rand_n100_r0,100,3686,99,10,100,684,727.200000,900,6.840000,0.684000,784,10,80,False,33,1,1,1,True,optimal,False,True,False,6850,0.057947
+crown,"structured",crown_n100_r0,100,2450,49,10,100,400,480.000000,900,4.000000,0.400000,500,10,64,False,50,2,2,2,True,optimal,False,True,False,4020,0.028257
+star,"structured",star_n100_r0,100,99,99,10,1,9,9.800000,900,0.090000,0.009000,109,10,1,True,1,1,1,1,True,optimal,True,True,False,100,0.004434
+wheel,"structured",wheel_n100_r0,100,198,99,10,1,9,9.800000,900,0.090000,0.009000,109,10,1,True,1,1,1,1,True,optimal,True,True,False,100,0.007324
+double_star,"structured",double_star_n100_r0,100,99,50,10,2,8,19.600000,900,0.080000,0.008000,108,10,11,False,50,50,50,50,True,optimal,True,True,True,580,0.532832
+split,"structured",split_n100_r0,100,569,69,10,10,55,98.000000,900,0.550000,0.055000,155,10,17,False,44,31,31,31,True,optimal,False,True,False,860,0.791875
+gnp_sparse,"random",gnp_sparse_n100_r0,100,151,8,10,0,0,0.000000,900,0.000000,0.000000,100,8,34,True,34,32,32,32,True,optimal,False,True,True,320,1.160911
+barabasi_albert,"random",barabasi_albert_n100_r0,100,291,28,10,11,13,57.100000,900,0.130000,0.013000,113,10,27,False,32,22,22,22,True,optimal,False,True,True,350,1.770132
+powerlaw_bipartite,"random",powerlaw_bipartite_n100_r0,100,117,20,10,3,3,23.100000,900,0.030000,0.003000,103,10,41,False,47,42,42,42,True,optimal,False,True,True,450,0.769102
+grid,"structured",grid_n100_r0,100,180,4,10,0,0,0.000000,900,0.000000,0.000000,100,4,28,True,28,24,24,24,True,optimal,False,True,True,240,1.371506
+cubic_bipartite,"NP-complete (cubic planar bipartite)",cubic_bipartite_n100_r1,100,148,3,10,0,0,0.000000,900,0.000000,0.000000,100,3,29,True,29,27,27,27,True,optimal,False,True,True,270,1.133918
+planar_delaunay,"NP-hard (planar)",planar_delaunay_n100_r1,100,283,10,10,0,0,0.000000,900,0.000000,0.000000,100,10,17,True,17,16,16,16,True,optimal,False,True,True,160,2.142912
+regular_d4,"NP-hard to approximate (bounded degree)",regular_d4_n100_r1,100,200,4,10,0,0,0.000000,900,0.000000,0.000000,100,4,24,True,24,23,23,23,True,optimal,False,True,True,230,1.537185
+regular_d5,"NP-hard to approximate (bounded degree)",regular_d5_n100_r1,100,250,5,10,0,0,0.000000,900,0.000000,0.000000,100,5,22,True,22,20,20,20,True,optimal,False,True,True,200,1.893868
+regular_d6,"NP-hard to approximate (bounded degree)",regular_d6_n100_r1,100,300,6,10,0,0,0.000000,900,0.000000,0.000000,100,6,20,True,20,18,18,18,True,optimal,False,True,True,180,2.308620
+regular_bipartite_d4,"NP-hard to approximate (bounded-degree bipartite)",regular_bipartite_d4_n100_r1,100,194,4,10,0,0,0.000000,900,0.000000,0.000000,100,4,25,True,25,23,23,23,True,optimal,False,True,True,230,1.567983
+regular_bipartite_d5,"NP-hard to approximate (bounded-degree bipartite)",regular_bipartite_d5_n100_r1,100,242,5,10,0,0,0.000000,900,0.000000,0.000000,100,5,25,True,25,20,20,20,True,optimal,False,True,True,200,1.858431
+scids_B4,"SC-IDS reduction (bipartite, degree B)",scids_B4_n100_r1,94,124,4,9,0,0,0.000000,940,0.000000,0.000000,94,4,35,True,35,32,32,32,True,optimal,False,True,True,288,0.954788
+scids_B6,"SC-IDS reduction (bipartite, degree B)",scids_B6_n100_r1,93,168,6,9,0,0,0.000000,930,0.000000,0.000000,93,6,33,True,33,29,29,29,True,optimal,False,True,True,261,1.257540
+vcids_cubic,"VC-IDS reduction (degree 3)",vcids_cubic_n100_r1,240,288,3,15,0,0,0.000000,3600,0.000000,0.000000,240,3,88,True,88,86,86,86,True,optimal,False,True,True,1290,8.238659
+gnp_dense,"general graphs (n^(1-eps) hardness)",gnp_dense_n100_r1,100,2487,63,10,100,439,487.400000,900,4.390000,0.439000,539,10,54,False,5,4,4,4,True,optimal,False,True,False,4430,1.163577
+complete,"structured",complete_n100_r1,100,4950,99,10,100,900,980.000000,900,9.000000,0.900000,1000,10,77,False,1,1,1,1,True,optimal,True,True,False,9010,0.047538
+complete_bipartite_bal,"structured",complete_bipartite_bal_n100_r1,100,2500,50,10,100,400,490.000000,900,4.000000,0.400000,500,10,50,True,50,50,50,50,True,optimal,True,True,False,4500,1.739967
+complete_bipartite_1to3,"structured",complete_bipartite_1to3_n100_r1,100,1875,75,10,100,325,365.000000,900,3.250000,0.325000,425,10,30,False,25,25,25,25,True,optimal,True,True,False,3500,1.824440
+complete_multipartite_4,"structured",complete_multipartite_4_n100_r1,100,3750,75,10,100,700,740.000000,900,7.000000,0.700000,800,10,85,False,25,25,25,25,True,optimal,True,True,False,7250,1.185933
+complete_multipartite_rand,"structured",complete_multipartite_rand_n100_r1,100,3362,99,10,100,593,662.400000,900,5.930000,0.593000,693,10,71,False,35,1,1,1,True,optimal,False,True,False,5940,0.035819
+crown,"structured",crown_n100_r1,100,2450,49,10,100,400,480.000000,900,4.000000,0.400000,500,10,64,False,50,2,2,2,True,optimal,False,True,False,4020,0.029627
+star,"structured",star_n100_r1,100,99,99,10,1,9,9.800000,900,0.090000,0.009000,109,10,1,True,1,1,1,1,True,optimal,True,True,False,100,0.005310
+wheel,"structured",wheel_n100_r1,100,198,99,10,1,9,9.800000,900,0.090000,0.009000,109,10,1,True,1,1,1,1,True,optimal,True,True,False,100,0.007198
+double_star,"structured",double_star_n100_r1,100,99,50,10,2,8,19.600000,900,0.080000,0.008000,108,10,11,False,50,50,50,50,True,optimal,True,True,True,580,0.576992
+split,"structured",split_n100_r1,100,562,69,10,10,54,98.000000,900,0.540000,0.054000,154,10,21,False,45,31,31,31,True,optimal,False,True,False,850,0.791840
+gnp_sparse,"random",gnp_sparse_n100_r1,100,148,7,10,0,0,0.000000,900,0.000000,0.000000,100,7,37,True,37,33,33,33,True,optimal,False,True,True,330,1.158890
+barabasi_albert,"random",barabasi_albert_n100_r1,100,291,19,10,13,13,56.900000,900,0.130000,0.013000,113,10,27,False,33,24,24,24,True,optimal,False,True,True,370,1.843650
+powerlaw_bipartite,"random",powerlaw_bipartite_n100_r1,100,135,17,10,4,4,26.600000,900,0.040000,0.004000,104,10,40,False,40,39,39,39,True,optimal,False,True,True,430,0.939480
+grid,"structured",grid_n100_r1,100,180,4,10,0,0,0.000000,900,0.000000,0.000000,100,4,28,True,28,24,24,24,True,optimal,False,True,True,240,1.389478
+hypercube,"structured",hypercube_Q7,128,448,7,11,0,0,0.000000,1408,0.000000,0.000000,128,7,16,True,16,16,16,16,True,optimal,True,True,True,176,0.035471
+cubic_bipartite,"NP-complete (cubic planar bipartite)",cubic_bipartite_n400_r0,400,594,3,20,0,0,0.000000,7600,0.000000,0.000000,400,3,113,True,113,110,102,110,False,time_limit,False,False,True,2200,6.709317
+planar_delaunay,"NP-hard (planar)",planar_delaunay_n400_r0,400,1180,10,20,0,0,0.000000,7600,0.000000,0.000000,400,10,68,True,68,63,62,62,True,optimal,False,False,True,1240,5.307762
+regular_d4,"NP-hard to approximate (bounded degree)",regular_d4_n400_r0,400,800,4,20,0,0,0.000000,7600,0.000000,0.000000,400,4,99,True,99,93,81,93,False,time_limit,False,False,True,1860,6.332627
+regular_d5,"NP-hard to approximate (bounded degree)",regular_d5_n400_r0,400,1000,5,20,0,0,0.000000,7600,0.000000,0.000000,400,5,89,True,89,82,67,82,False,time_limit,False,False,True,1640,5.628698
+regular_d6,"NP-hard to approximate (bounded degree)",regular_d6_n400_r0,400,1200,6,20,0,0,0.000000,7600,0.000000,0.000000,400,6,79,True,79,73,58,73,False,time_limit,False,False,True,1460,5.131077
+regular_bipartite_d4,"NP-hard to approximate (bounded-degree bipartite)",regular_bipartite_d4_n400_r0,400,795,4,20,0,0,0.000000,7600,0.000000,0.000000,400,4,102,True,102,93,81,93,False,time_limit,False,False,True,1860,6.243249
+regular_bipartite_d5,"NP-hard to approximate (bounded-degree bipartite)",regular_bipartite_d5_n400_r0,400,992,5,20,0,0,0.000000,7600,0.000000,0.000000,400,5,89,True,89,82,68,82,False,time_limit,False,False,True,1640,5.608185
+scids_B4,"SC-IDS reduction (bipartite, degree B)",scids_B4_n400_r0,372,495,4,19,0,0,0.000000,7068,0.000000,0.000000,372,4,138,True,138,126,125,125,True,optimal,False,False,True,2375,7.347575
+scids_B6,"SC-IDS reduction (bipartite, degree B)",scids_B6_n400_r0,384,698,6,19,0,0,0.000000,7680,0.000000,0.000000,384,6,134,True,134,120,120,120,True,optimal,False,True,True,2280,6.369433
+vcids_cubic,"VC-IDS reduction (degree 3)",vcids_cubic_n400_r0,1000,1200,3,31,0,0,0.000000,32000,0.000000,0.000000,1000,3,370,True,370,360,250,360,False,not run,False,False,True,11160,6.436867
+gnp_dense,"general graphs (n^(1-eps) hardness)",gnp_dense_n400_r0,400,39829,223,20,400,3783,3962.900000,7600,9.457500,0.472875,4183,20,253,False,7,5,2,5,False,time_limit,False,False,False,75760,2.715044
+complete,"structured",complete_n400_r0,400,79800,399,20,400,7600,7960.000000,7600,19.000000,0.950000,8000,20,376,False,1,1,1,1,True,optimal,True,True,False,152020,0.698374
+complete_bipartite_bal,"structured",complete_bipartite_bal_n400_r0,400,40000,200,20,400,3600,3980.000000,7600,9.000000,0.450000,4000,20,200,True,200,200,200,200,True,optimal,True,True,False,76000,2.257697
+complete_bipartite_1to3,"structured",complete_bipartite_1to3_n400_r0,400,30000,300,20,400,2600,2980.000000,7600,6.500000,0.325000,3000,20,100,True,100,100,100,100,True,optimal,True,True,False,54000,1.956419
+complete_multipartite_4,"structured",complete_multipartite_4_n400_r0,400,60000,300,20,400,5600,5980.000000,7600,14.000000,0.700000,6000,20,302,False,100,100,100,100,True,optimal,True,True,False,114000,3.179330
+complete_multipartite_rand,"structured",complete_multipartite_rand_n400_r0,400,60784,382,20,400,5889,6058.400000,7600,14.722500,0.736125,6289,20,379,False,129,18,18,18,True,optimal,False,True,False,118140,2.805643
+crown,"structured",crown_n400_r0,400,39800,199,20,400,3600,3960.000000,7600,9.000000,0.450000,4000,20,247,False,200,2,2,2,True,optimal,False,True,False,72040,0.421116
+star,"structured",star_n400_r0,400,399,399,20,1,19,19.900000,7600,0.047500,0.002375,419,20,1,True,1,1,1,1,True,optimal,True,True,False,400,0.045227
+wheel,"structured",wheel_n400_r0,400,798,399,20,1,19,19.900000,7600,0.047500,0.002375,419,20,1,True,1,1,1,1,True,optimal,True,True,False,400,0.077203
+double_star,"structured",double_star_n400_r0,400,399,200,20,2,18,39.800000,7600,0.045000,0.002250,418,20,21,False,200,200,200,200,True,optimal,True,True,True,4360,5.705258
+split,"structured",split_n400_r0,400,4182,232,20,20,209,398.000000,7600,0.522500,0.026125,609,20,59,False,197,168,168,168,True,optimal,False,True,False,7540,1.498310
+gnp_sparse,"random",gnp_sparse_n400_r0,400,551,9,20,0,0,0.000000,7600,0.000000,0.000000,400,9,155,True,155,145,145,145,True,optimal,False,True,True,2900,13.245717
+barabasi_albert,"random",barabasi_albert_n400_r0,400,1191,67,20,15,19,118.350000,7600,0.047500,0.002375,419,20,114,False,140,100,99,99,True,optimal,False,False,True,2360,6.573670
+powerlaw_bipartite,"random",powerlaw_bipartite_n400_r0,400,494,55,20,5,6,49.150000,7600,0.015000,0.000750,406,20,177,False,178,172,172,172,True,optimal,False,True,True,3560,10.108941
+grid,"structured",grid_n400_r0,400,760,4,20,0,0,0.000000,7600,0.000000,0.000000,400,4,107,True,107,93,86,93,False,time_limit,False,False,True,1860,11.303881
+cubic_bipartite,"NP-complete (cubic planar bipartite)",cubic_bipartite_n400_r1,400,595,3,20,0,0,0.000000,7600,0.000000,0.000000,400,3,113,True,113,109,102,109,False,time_limit,False,False,True,2180,10.152013
+planar_delaunay,"NP-hard (planar)",planar_delaunay_n400_r1,400,1180,12,20,0,0,0.000000,7600,0.000000,0.000000,400,12,68,True,68,61,61,61,True,optimal,False,True,True,1220,8.256393
+regular_d4,"NP-hard to approximate (bounded degree)",regular_d4_n400_r1,400,800,4,20,0,0,0.000000,7600,0.000000,0.000000,400,4,101,True,101,93,81,93,False,time_limit,False,False,True,1860,9.541004
+regular_d5,"NP-hard to approximate (bounded degree)",regular_d5_n400_r1,400,1000,5,20,0,0,0.000000,7600,0.000000,0.000000,400,5,89,True,89,81,67,81,False,time_limit,False,False,True,1620,8.870693
+regular_d6,"NP-hard to approximate (bounded degree)",regular_d6_n400_r1,400,1200,6,20,0,0,0.000000,7600,0.000000,0.000000,400,6,82,True,82,73,58,73,False,time_limit,False,False,True,1460,8.175626
+regular_bipartite_d4,"NP-hard to approximate (bounded-degree bipartite)",regular_bipartite_d4_n400_r1,400,792,4,20,0,0,0.000000,7600,0.000000,0.000000,400,4,99,True,99,92,82,92,False,time_limit,False,False,True,1840,9.599837
+regular_bipartite_d5,"NP-hard to approximate (bounded-degree bipartite)",regular_bipartite_d5_n400_r1,400,989,5,20,0,0,0.000000,7600,0.000000,0.000000,400,5,86,True,86,82,68,82,False,time_limit,False,False,True,1640,7.340185
+scids_B4,"SC-IDS reduction (bipartite, degree B)",scids_B4_n400_r1,375,498,4,19,0,0,0.000000,7125,0.000000,0.000000,375,4,139,True,139,126,126,126,True,optimal,False,True,True,2394,12.714597
+scids_B6,"SC-IDS reduction (bipartite, degree B)",scids_B6_n400_r1,384,698,6,19,0,0,0.000000,7680,0.000000,0.000000,384,6,134,True,134,119,119,119,True,optimal,False,True,True,2261,10.528797
+vcids_cubic,"VC-IDS reduction (degree 3)",vcids_cubic_n400_r1,1000,1200,3,31,0,0,0.000000,32000,0.000000,0.000000,1000,3,371,True,371,360,250,360,False,not run,False,False,True,11160,12.051249
+gnp_dense,"general graphs (n^(1-eps) hardness)",gnp_dense_n400_r1,400,39790,230,20,400,3778,3959.000000,7600,9.445000,0.472250,4178,20,249,False,7,5,3,5,False,time_limit,False,False,False,75660,5.000345
+complete,"structured",complete_n400_r1,400,79800,399,20,400,7600,7960.000000,7600,19.000000,0.950000,8000,20,376,False,1,1,1,1,True,optimal,True,True,False,152020,1.289426
+complete_bipartite_bal,"structured",complete_bipartite_bal_n400_r1,400,40000,200,20,400,3600,3980.000000,7600,9.000000,0.450000,4000,20,200,True,200,200,2,200,False,time_limit,False,False,False,76000,3.838007
+complete_bipartite_1to3,"structured",complete_bipartite_1to3_n400_r1,400,30000,300,20,400,2600,2980.000000,7600,6.500000,0.325000,3000,20,100,True,100,100,100,100,True,optimal,True,True,False,54000,3.779931
+complete_multipartite_4,"structured",complete_multipartite_4_n400_r1,400,60000,300,20,400,5600,5980.000000,7600,14.000000,0.700000,6000,20,302,False,100,100,100,100,True,optimal,True,True,False,114000,5.168621
+complete_multipartite_rand,"structured",complete_multipartite_rand_n400_r1,400,49637,392,20,400,4851,4943.700000,7600,12.127500,0.606375,5251,20,349,False,216,8,8,8,True,optimal,False,True,False,97180,4.571594
+crown,"structured",crown_n400_r1,400,39800,199,20,400,3600,3960.000000,7600,9.000000,0.450000,4000,20,247,False,200,2,2,2,True,optimal,False,True,False,72040,0.624036
+star,"structured",star_n400_r1,400,399,399,20,1,19,19.900000,7600,0.047500,0.002375,419,20,1,True,1,1,1,1,True,optimal,True,True,False,400,0.021604
+wheel,"structured",wheel_n400_r1,400,798,399,20,1,19,19.900000,7600,0.047500,0.002375,419,20,1,True,1,1,1,1,True,optimal,True,True,False,400,0.060612
+double_star,"structured",double_star_n400_r1,400,399,200,20,2,18,39.800000,7600,0.045000,0.002250,418,20,21,False,200,200,200,200,True,optimal,True,True,True,4360,5.011852
+split,"structured",split_n400_r1,400,4094,228,20,20,202,398.000000,7600,0.505000,0.025250,602,20,67,False,203,172,172,172,True,optimal,False,True,False,7480,1.436462
+gnp_sparse,"random",gnp_sparse_n400_r1,400,574,11,20,0,0,0.000000,7600,0.000000,0.000000,400,11,145,True,145,134,133,133,True,optimal,False,False,True,2660,13.833931
+barabasi_albert,"random",barabasi_albert_n400_r1,400,1191,54,20,14,17,118.400000,7600,0.042500,0.002125,417,20,108,False,117,99,94,94,True,optimal,False,False,True,2220,7.594137
+powerlaw_bipartite,"random",powerlaw_bipartite_n400_r1,400,535,50,20,3,4,53.350000,7600,0.010000,0.000500,404,20,166,True,166,160,160,160,True,optimal,False,True,True,3280,11.806718
+grid,"structured",grid_n400_r1,400,760,4,20,0,0,0.000000,7600,0.000000,0.000000,400,4,107,True,107,93,86,93,False,time_limit,False,False,True,1860,10.859213
+hypercube,"structured",hypercube_Q9,512,2304,9,22,0,0,0.000000,11776,0.000000,0.000000,512,9,70,True,70,64,52,64,False,not run,False,False,True,1408,5.036089
+kr,"UG-hard vertex cover (Khot--Regev)",kr_N40_r0,640,8466,64,25,267,323,666.600000,16000,0.504687,0.019950,963,25,122,False,204,153,10,153,False,not run,False,False,False,11900,3.567062
+kr_bounded,"UG-hard bounded degree (Austrin--Khot--Safra setting)",kr_bounded_s4_N40_r0,160,443,12,12,0,0,0.000000,2080,0.000000,0.000000,160,12,57,True,57,50,49,49,True,optimal,False,False,True,588,5.365535
+kr_bounded,"UG-hard bounded degree (Austrin--Khot--Safra setting)",kr_bounded_s8_N40_r0,320,1423,24,17,27,27,165.823529,5760,0.084375,0.004717,347,17,69,False,127,95,93,93,True,optimal,False,False,True,2040,4.441036
+kr,"UG-hard vertex cover (Khot--Regev)",kr_N40_r1,640,7544,64,25,224,276,594.560000,16000,0.431250,0.017047,916,25,120,False,218,159,10,159,False,not run,False,False,False,10875,3.650051
+kr_bounded,"UG-hard bounded degree (Austrin--Khot--Safra setting)",kr_bounded_s4_N40_r1,160,436,12,12,0,0,0.000000,2080,0.000000,0.000000,160,12,56,True,56,47,47,47,True,optimal,False,True,True,564,5.025294
+kr_bounded,"UG-hard bounded degree (Austrin--Khot--Safra setting)",kr_bounded_s8_N40_r1,320,1686,24,17,39,39,196.058824,5760,0.121875,0.006813,359,17,61,False,104,86,83,83,True,optimal,False,False,True,2074,4.339759
+vcids_kr,"VC-IDS of Khot--Regev (UGC)",vcids_kr_N40_r0,51550,67880,64,227,0,0,0.000000,11701850,0.000000,0.000000,51550,64,17609,True,17609,17481,794,17481,False,not run,False,False,True,3968187,30.672840
+vcids_kr,"VC-IDS of Khot--Regev (UGC)",vcids_kr_N40_r1,49096,64608,64,221,0,0,0.000000,10899312,0.000000,0.000000,49096,64,16788,True,16788,16770,756,16770,False,not run,False,False,True,3706170,33.280292
