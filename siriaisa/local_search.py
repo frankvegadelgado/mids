@@ -310,7 +310,7 @@ def _descent(st: _State, queue: deque, queued: list[bool], limit: float,
 
 def improve_ids(adj: list[list[int]], in_s: list[bool], budget: float = DEFAULT_REFINE_BUDGET,
                 seed: int = DEFAULT_SEED, floor: int = DEFAULT_WORK_FLOOR,
-                ils: bool = True) -> list[bool]:
+                ils: bool = True, target: int = 0) -> list[bool]:
     """Budgeted descent (+ the weighted swap search when ``ils``) from the maximal independent
     set ``in_s``. Returns a maximal independent set no larger than ``in_s``.
     ``O(max(budget * (n + m), floor))``."""
@@ -335,13 +335,13 @@ def improve_ids(adj: list[list[int]], in_s: list[bool], budget: float = DEFAULT_
     best = list(st.in_s)
     best_size = st.size
     st.work += n
-    if not ils or m == 0:
-        return best
+    if not ils or m == 0 or best_size <= target:
+        return best  # (a set of at most ``target`` vertices -- a certified lower bound -- is optimal)
 
     # Weighted swap search (siriaisa.weighted_search) from the descent result, then a last
     # descent on its result.
     rest = max(budget * (n + m), floor) - (st.work - start_work)
-    found = weighted_swap_search(adj, best, max(rest, 0) / (n + m), seed, int(max(rest, 0)))
+    found = weighted_swap_search(adj, best, max(rest, 0) / (n + m), seed, int(max(rest, 0)), target)
     if sum(found) < best_size:
         st2 = _State(adj, found)
         lim2 = st2.work + max(n + m, floor // 10)

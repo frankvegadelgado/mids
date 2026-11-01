@@ -42,9 +42,11 @@ Every update costs the degrees of the two-hop neighbourhood of the changed
 vertex; all of it is charged to a work counter and the search stops at
 ``max(budget * (n + m), floor)`` units, so it runs in ``O(n + m)`` time for a fixed
 budget. Weights are halved (and the scores recomputed, ``O(n + m)``) when their
-mean exceeds a threshold, chosen from :data:`WEIGHT_LIMITS` by the seed. The
-search never returns a set larger than its input, which must be an independent
-dominating set.
+mean exceeds a threshold (the weight cap). The best cap depends on the graph,
+so a search is split into :data:`SEGMENTS` segments that cycle through
+:data:`WEIGHT_LIMITS`, each restarted with fresh weights from the best set found
+so far. The search never returns a set larger than its input, which must be an
+independent dominating set.
 """
 
 from __future__ import annotations
@@ -53,9 +55,11 @@ import random
 
 #: Vertices of S sampled for the removal (best from multiple selection).
 SAMPLE: int = 50
-#: Mean weights above which the weights are halved; the search started with seed ``s`` uses
-#: ``WEIGHT_LIMITS[s % len(WEIGHT_LIMITS)]``, so the ensemble's searches (different seeds) differ.
-WEIGHT_LIMITS: tuple[float, ...] = (10.0, 30.0, 100.0)
+#: Mean weights above which the weights are halved; the segments of a search cycle through them
+#: (the best cap depends on the graph: 10 on dense random bipartite graphs, 30-300 on cubic ones).
+WEIGHT_LIMITS: tuple[float, ...] = (10.0, 100.0, 30.0, 300.0)
+#: Segments of one search (each with its own weight cap, restarted from the best set).
+SEGMENTS: int = 4
 
 
 class _IndexedSet:
@@ -85,8 +89,8 @@ class _IndexedSet:
         return len(self.items)
 
 
-def weighted_swap_search(adj: list[list[int]], in_s: list[bool], budget: float, seed: int,
-                         floor: int) -> list[bool]:
+def _search(adj: list[list[int]], in_s: list[bool], budget: float, seed: int,
+            floor: int, weight_limit: float, target: int = 0) -> list[bool]:
     """Improve the independent dominating set ``in_s`` by the weighted swap search.
     Returns an independent dominating set no larger than ``in_s``."""
     n = len(adj)
@@ -95,7 +99,6 @@ def weighted_swap_search(adj: list[list[int]], in_s: list[bool], budget: float, 
     if m == 0:
         return best
     rng = random.Random(seed)
-    weight_limit = WEIGHT_LIMITS[seed % len(WEIGHT_LIMITS)]
     limit = max(budget * (n + m), floor)
     work = 0
 
@@ -249,7 +252,7 @@ def weighted_swap_search(adj: list[list[int]], in_s: list[bool], budget: float, 
     best_size = sum(best)
     step = 0
     last_added = -1
-    while work <= limit and len(sset) > 0:
+    while work <= limit and len(sset) > 0 and best_size > target:
         if len(undom) == 0 and len(clash) == 0:
             if len(sset) < best_size:
                 best_size = len(sset)
@@ -314,4 +317,27 @@ def weighted_swap_search(adj: list[list[int]], in_s: list[bool], budget: float, 
                 we[e] = max(1, we[e] // 2)
             recompute()
             work += 4 * (n + m)
+    return best
+
+
+def weighted_swap_search(adj: list[list[int]], in_s: list[bool], budget: float, seed: int,
+                         floor: int, target: int = 0) -> list[bool]:
+    """Improve the independent dominating set ``in_s`` by the weighted swap search, in
+    segments: the work ``max(budget * (n + m), floor)`` is split into :data:`SEGMENTS` equal
+    parts, segment ``i`` uses the weight cap ``WEIGHT_LIMITS[(seed + i) % len(WEIGHT_LIMITS)]``
+    and starts, with fresh weights, from the best set found so far. Returns an independent
+    dominating set no larger than ``in_s``. The search stops as soon as a set of at most
+    ``target`` vertices is found (a certified lower bound: such a set is optimal)."""
+    n = len(adj)
+    m = sum(len(a) for a in adj) // 2
+    total = max(budget * (n + m), floor)
+    part = total / SEGMENTS
+    best = list(in_s)
+    for i in range(SEGMENTS):
+        if sum(best) <= target:
+            break
+        cap = WEIGHT_LIMITS[(seed + i) % len(WEIGHT_LIMITS)]
+        res = _search(adj, best, 0.0, seed + 7919 * i, int(part), cap, target)
+        if sum(res) < sum(best):
+            best = res
     return best

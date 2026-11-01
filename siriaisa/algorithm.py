@@ -82,8 +82,10 @@ Improvers
   selected by all/most of c1..c16 are forced and the residual graph is solved
   again.
 * c18 -- refinement of every candidate c1..c17: forest large-neighbourhood
-  search and local search on each, a longer search on the best; the smallest
-  set is returned (Esperanza's final MaximizeSolution: it is maximal).
+  search and local search on each, a longer search on the best (with its own
+  constant work floor ``final_floor``: on cubic graphs the nearest smaller
+  solution can differ from the best one in about a third of the vertices); the
+  smallest set is returned (Esperanza's final MaximizeSolution: it is maximal).
 
 So every candidate, and every layer of every candidate (c10, c16, c18), is
 solved by the exact forest solver with the ensemble as context.
@@ -137,6 +139,9 @@ DEFAULT_CONSENSUS_ROUNDS: int = consensus_force.DEFAULT_ROUNDS
 #: Refinement (c18): local-search budget per candidate and for the best one, in units of (n + m).
 DEFAULT_REFINE_BUDGET: float = 3.0
 DEFAULT_ILS_BUDGET: float = 30.0
+#: Constant work floor of the final search of c18 (larger than the other searches': on cubic
+#: graphs the nearest smaller solution can differ in a third of the vertices).
+DEFAULT_FINAL_FLOOR: int = 24_000_000
 
 #: Human-readable names of the strategies, in evaluation order.
 CANDIDATE_NAMES: Dict[str, str] = {
@@ -444,6 +449,7 @@ def final_candidates(
     ils_budget: float = DEFAULT_ILS_BUDGET,
     seed: int = local_search.DEFAULT_SEED,
     work_floor: int = local_search.DEFAULT_WORK_FLOOR,
+    final_floor: int = DEFAULT_FINAL_FLOOR,
     return_refined: bool = False,
     info: Optional[dict] = None,
 ):
@@ -476,6 +482,20 @@ def final_candidates(
     cands["c8"] = forest_dp.spanning_forest_ids(adj, "dfs")
 
     _, comp, is_bip = bipartite.two_colouring(adj)
+    # Certified lower bound: a component with n_c vertices and maximum degree D_c needs at
+    # least ceil(n_c / (D_c + 1)) vertices (each selected vertex dominates at most D_c + 1).
+    comp_n: Dict[int, int] = {}
+    comp_d: Dict[int, int] = {}
+    for v in range(n):
+        c = comp[v]
+        comp_n[c] = comp_n.get(c, 0) + 1
+        comp_d[c] = max(comp_d.get(c, 0), len(adj[v]))
+    lower_bound = sum(-(-comp_n[c] // (comp_d[c] + 1)) for c in comp_n)
+    # Size-scaled work floors: min(floor, c (n + m)^2) -- still constants, so the running time
+    # stays linear, but a small graph no longer pays for millions of units of work.
+    nm = n + sum(len(a) for a in adj) // 2
+    work_floor = min(work_floor, 10 * nm * nm)
+    final_floor = min(final_floor, 100 * nm * nm)
     layer_info: dict = {}
     cands["c9"] = forest_layers.forest_layers_ids(adj, comp, layer_budget, layer_orders, layer_info)
     layers: List[List[int]] = layer_info.pop("layer_lists")
@@ -501,11 +521,15 @@ def final_candidates(
     cands["c14"] = complete(adj, (v for v in range(n) if votes[v]), priority=votes)
 
     best = _best(cands)
-    cands["c15"] = local_search.improve_ids(adj, best, local_search_budget, seed, work_floor)
+    cands["c15"] = local_search.improve_ids(adj, best, local_search_budget, seed, work_floor,
+                                            target=lower_bound)
 
     cur = _best(cands)
     for r in range(search_rounds):
-        nxt = local_search.improve_ids(adj, cur, search_budget, seed + 101 * (r + 1), work_floor // 2)
+        if sum(cur) <= lower_bound:
+            break
+        nxt = local_search.improve_ids(adj, cur, search_budget, seed + 101 * (r + 1), work_floor // 2,
+                                       target=lower_bound)
         nxt = forest_dp.forest_lns(adj, layers, nxt, lns_budget)
         if sum(nxt) <= sum(cur):
             cur = nxt
@@ -522,10 +546,11 @@ def final_candidates(
         key = frozenset(_members(in_s))
         if key not in seen:
             r = forest_dp.forest_lns(adj, layers, in_s, lns_budget, passes=1)
-            seen[key] = local_search.improve_ids(adj, r, refine_budget, seed + i, work_floor // 8)
+            seen[key] = local_search.improve_ids(adj, r, refine_budget, seed + i, work_floor // 8,
+                                                 target=lower_bound)
         refined[name] = seen[key]
     top = min(refined.values(), key=sum)
-    final = local_search.improve_ids(adj, top, ils_budget, seed, work_floor)
+    final = local_search.improve_ids(adj, top, ils_budget, seed, final_floor, target=lower_bound)
     final = forest_dp.forest_lns(adj, layers, final, lns_budget)
     final = complete(adj, _members(final))  # Esperanza's final MaximizeSolution (already maximal)
     if sum(final) > sum(top):
@@ -542,6 +567,7 @@ def final_candidates(
     if info is not None:
         info.update({
             "components": ncomp,
+            "lower_bound": lower_bound,
             "bipartite_components": sum(is_bip),
             "is_bipartite": all(is_bip),
             "c1_iterations": tree_info["iterations"],

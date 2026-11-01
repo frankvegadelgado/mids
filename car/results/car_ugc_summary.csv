@@ -1,0 +1,9 @@
+family,instances,optimal,open,max_ratio,mean_ratio,max_degree,bipartite,vc_instances,vc_optimal,max_vc_ratio,siriaisa_seconds
+scids_B4,6,6,0,1.000000,1.000000,4,True,0,0,,34.589658
+scids_B5,6,6,0,1.000000,1.000000,5,True,0,0,,32.455508
+scids_B6,6,6,0,1.000000,1.000000,6,True,0,0,,30.438160
+vcids_kr,10,0,10,1.017471,1.009196,64,False,10,0,1.866469,199.556026
+vcids_reg3,9,1,8,1.030942,1.015300,3,False,9,1,1.198198,54.472398
+vcids_reg4,9,1,8,1.035987,1.018745,4,False,9,1,1.282051,49.124057
+vcids_reg5,9,0,9,1.037500,1.024339,5,False,9,0,1.350000,51.422822
+ALL,55,20,35,1.037500,1.011226,64,False,37,2,1.866469,452.058629

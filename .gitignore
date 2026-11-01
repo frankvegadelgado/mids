@@ -173,36 +173,4 @@ cython_debug/
 # user custom
 app.log
 sparse_matrix_*
-
-# ============================================================
-# Reproducibility-bundle policy: ship the run logs (.txt) but
-# exclude the raw DIMACS graph files of the three large benchmark
-# sub-experiments. The experiment/hardest/ folder is shipped in
-# full (instances + log). See the "Excluded Graph Files and How to
-# Re-download Them" section of README.md for re-download URLs.
-# ============================================================
-
-# NPBench FRB sub-experiment (41 .mis instances, total ~tens of MB)
-experiment/npbench/benchmarks_npbench/*.mis
-experiment/npbench/benchmarks_npbench/*.mis.xz
-experiment/npbench/benchmarks_npbench/*.mis.bz2
-
-# NPBench DIMACS clique-complement sub-experiment (68 instances)
-experiment/npbench/clique_complement_npbench/*.clq-compliment.txt
-experiment/npbench/clique_complement_npbench/*.clq-compliment.txt.xz
-experiment/npbench/clique_complement_npbench/*.clq-compliment.txt.bz2
-
-# Real-world Network Data Repository sub-experiment (130 instances,
-# ~1.2 GB total uncompressed). The instances are extension-less DIMACS
-# files; we exclude everything in experiment/network/ except the run log.
-experiment/network/*
-!experiment/network/network.txt
-!experiment/network/.gitkeep
-
-# But explicitly KEEP the run-log .txt files in the npbench sub-folders.
-!experiment/npbench/benchmarks_npbench/benchmarks_npbench.txt
-!experiment/npbench/clique_complement_npbench/clique_complement_npbench.txt
-
-# The experiment/hardest/ folder is shipped in full -- no ignore rules
-# apply there. Its 13 .clq instance files plus hardest.txt are all
-# committed; the adversarial suite is small (a few KB).
+experiment/
