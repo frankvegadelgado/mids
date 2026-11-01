@@ -54,8 +54,9 @@ Certified bounds (the optimum is never given to Siriaisa)
   L = L_tau + 2m <= ids(h(H)) <= U_tau + 2m.
 * SC-IDS: the set-cover MILP gives L_sc <= sc <= U_sc; L = L_sc + |S|.
 
-Status of Siriaisa's |D|: ``optimal`` when |D| = L (then ids = L), ``open``
-otherwise (|D| / L is then an upper bound on the ratio). For VC-IDS the decoded
+Status of Siriaisa's |D|: ``optimal`` when |D| = L (then ids = L), ``suboptimal``
+when the optimum is proved (L = U) and |D| > L, ``open`` otherwise (|D| / L is
+then an upper bound on the ratio). For VC-IDS the decoded
 cover C_D (|C_D| <= |D| - 2m) is reported with |C_D| / L_tau, and ``vc_optimal``
 when |C_D| = L_tau. ``--self-check`` also solves the MIDS MILP directly on the
 small instances and checks ids(h(H)) = vc(H) + 2m and ids(G) = sc + |S|.
@@ -426,7 +427,12 @@ def run_instance(name: str, family: str, params: dict, args) -> dict:
             if opt and sc_opt and val != sc_value + len(sets):
                 raise AssertionError(f"{name}: ids(G) = {val} differs from sc + |S| = {sc_value + len(sets)}")
     row["ratio"] = row["siriaisa"] / row["lower"] if row["lower"] else 1.0
-    row["status"] = "optimal" if row["siriaisa"] == row["lower"] else "open"
+    if row["siriaisa"] == row["lower"]:
+        row["status"] = "optimal"
+    elif row["lower"] == row["upper"]:
+        row["status"] = "suboptimal"  # the optimum is proved (L = U) and Siriaisa exceeds it
+    else:
+        row["status"] = "open"
     row["elapsed_seconds"] = elapsed
     row["ip_seconds"] = ip_seconds
     extra = (f" tau in [{row['tau_lower']},{row['tau_upper']}] C_D={row['decoded_cover']} "
@@ -485,6 +491,7 @@ def summarise(rows: list[dict]) -> dict:
         out[f] = {
             "instances": k,
             "optimal": sum(r["status"] == "optimal" for r in g),
+            "suboptimal": sum(r["status"] == "suboptimal" for r in g),
             "open": sum(r["status"] == "open" for r in g),
             "max_ratio": max((r["ratio"] for r in g), default=1.0),
             "mean_ratio": sum(r["ratio"] for r in g) / k if k else 1.0,
@@ -534,7 +541,7 @@ def main() -> None:
         for r in rows:
             fh.write(",".join("" if r.get(c) is None else
                               (f"{r[c]:.6f}" if isinstance(r.get(c), float) else str(r[c])) for c in cols) + "\n")
-    scols = ["instances", "optimal", "open", "max_ratio", "mean_ratio", "max_degree", "bipartite", "vc_instances",
+    scols = ["instances", "optimal", "suboptimal", "open", "max_ratio", "mean_ratio", "max_degree", "bipartite", "vc_instances",
              "vc_optimal", "max_vc_ratio", "siriaisa_seconds"]
     with (OUT_DIR / "car_ugc_summary.csv").open("w", encoding="utf-8") as fh:
         fh.write("family," + ",".join(scols) + "\n")
@@ -550,14 +557,14 @@ def main() -> None:
          "elapsed_seconds": time.time() - started}, indent=2, default=str), encoding="utf-8")
 
     print("\nMIDS hardness families: Siriaisa against certified lower bounds")
-    print(f"{'family':14} {'inst':>5} {'opt':>5} {'open':>5} {'max ratio':>10} {'Delta':>6} {'bip':>4}"
+    print(f"{'family':14} {'inst':>5} {'opt':>5} {'sub':>5} {'open':>5} {'max ratio':>10} {'Delta':>6} {'bip':>4}"
           f" {'vc opt':>7} {'max vc ratio':>13}")
     for f, s in summary.items():
         mvr = "" if s["max_vc_ratio"] is None else f"{s['max_vc_ratio']:.6f}"
-        print(f"{f:14} {s['instances']:>5} {s['optimal']:>5} {s['open']:>5} {s['max_ratio']:10.6f}"
+        print(f"{f:14} {s['instances']:>5} {s['optimal']:>5} {s['suboptimal']:>5} {s['open']:>5} {s['max_ratio']:10.6f}"
               f" {s['max_degree']:>6} {str(s['bipartite'])[0]:>4} {s['vc_optimal'] if s['vc_instances'] else '':>7} {mvr:>13}")
-    print("opt = Siriaisa's size equals the certified lower bound (then it is optimal); open = otherwise "
-          "(ratio is an upper bound). vc = the vertex cover of H decoded from Siriaisa's set on h(H).")
+    print("opt = Siriaisa's size equals the certified lower bound (then it is optimal); sub = the optimum is proved "
+          "and Siriaisa exceeds it; open = otherwise (ratio is an upper bound). vc = the vertex cover of H decoded from Siriaisa's set on h(H).")
 
 
 if __name__ == "__main__":

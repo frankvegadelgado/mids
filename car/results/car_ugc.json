@@ -17,6 +17,7 @@
     "scids_B4": {
       "instances": 6,
       "optimal": 6,
+      "suboptimal": 0,
       "open": 0,
       "max_ratio": 1.0,
       "mean_ratio": 1.0,
@@ -25,11 +26,12 @@
       "vc_instances": 0,
       "vc_optimal": 0,
       "max_vc_ratio": null,
-      "siriaisa_seconds": 34.58965770000941
+      "siriaisa_seconds": 28.62660699999833
     },
     "scids_B5": {
       "instances": 6,
       "optimal": 6,
+      "suboptimal": 0,
       "open": 0,
       "max_ratio": 1.0,
       "mean_ratio": 1.0,
@@ -38,11 +40,12 @@
       "vc_instances": 0,
       "vc_optimal": 0,
       "max_vc_ratio": null,
-      "siriaisa_seconds": 32.45550839998759
+      "siriaisa_seconds": 27.112581600005797
     },
     "scids_B6": {
       "instances": 6,
       "optimal": 6,
+      "suboptimal": 0,
       "open": 0,
       "max_ratio": 1.0,
       "mean_ratio": 1.0,
@@ -51,12 +54,13 @@
       "vc_instances": 0,
       "vc_optimal": 0,
       "max_vc_ratio": null,
-      "siriaisa_seconds": 30.438159700010146
+      "siriaisa_seconds": 26.14121640000667
     },
     "vcids_kr": {
       "instances": 10,
       "optimal": 0,
-      "open": 10,
+      "suboptimal": 7,
+      "open": 3,
       "max_ratio": 1.0174714294261953,
       "mean_ratio": 1.0091955749429329,
       "max_degree": 64,
@@ -64,12 +68,13 @@
       "vc_instances": 10,
       "vc_optimal": 0,
       "max_vc_ratio": 1.8664688427299703,
-      "siriaisa_seconds": 199.5560256999961
+      "siriaisa_seconds": 205.2672878999947
     },
     "vcids_reg3": {
       "instances": 9,
       "optimal": 1,
-      "open": 8,
+      "suboptimal": 8,
+      "open": 0,
       "max_ratio": 1.030942334739803,
       "mean_ratio": 1.0153001984202605,
       "max_degree": 3,
@@ -77,12 +82,13 @@
       "vc_instances": 9,
       "vc_optimal": 1,
       "max_vc_ratio": 1.1981981981981982,
-      "siriaisa_seconds": 54.47239830000035
+      "siriaisa_seconds": 65.31637179999234
     },
     "vcids_reg4": {
       "instances": 9,
       "optimal": 1,
-      "open": 8,
+      "suboptimal": 7,
+      "open": 1,
       "max_ratio": 1.0359869138495092,
       "mean_ratio": 1.0187450922414323,
       "max_degree": 4,
@@ -90,12 +96,13 @@
       "vc_instances": 9,
       "vc_optimal": 1,
       "max_vc_ratio": 1.2820512820512822,
-      "siriaisa_seconds": 49.124057100001664
+      "siriaisa_seconds": 62.61982940000598
     },
     "vcids_reg5": {
       "instances": 9,
       "optimal": 0,
-      "open": 9,
+      "suboptimal": 6,
+      "open": 3,
       "max_ratio": 1.0375,
       "mean_ratio": 1.0243386428298766,
       "max_degree": 5,
@@ -103,12 +110,13 @@
       "vc_instances": 9,
       "vc_optimal": 0,
       "max_vc_ratio": 1.35,
-      "siriaisa_seconds": 51.422822299988184
+      "siriaisa_seconds": 62.745489299995825
     },
     "ALL": {
       "instances": 55,
       "optimal": 20,
-      "open": 35,
+      "suboptimal": 28,
+      "open": 7,
       "max_ratio": 1.0375,
       "mean_ratio": 1.0112256572882448,
       "max_degree": 64,
@@ -116,7 +124,7 @@
       "vc_instances": 37,
       "vc_optimal": 2,
       "max_vc_ratio": 1.8664688427299703,
-      "siriaisa_seconds": 452.05862919999345
+      "siriaisa_seconds": 477.82938339999964
     }
   },
   "rows": [
@@ -150,9 +158,9 @@
       "vc_ratio": 1.4322033898305084,
       "vc_optimal": false,
       "ratio": 1.0089515562836415,
-      "status": "open",
-      "elapsed_seconds": 22.083940099997562,
-      "ip_seconds": 16.531455100004678
+      "status": "suboptimal",
+      "elapsed_seconds": 19.63079160000052,
+      "ip_seconds": 16.709483400001773
     },
     {
       "name": "kr_k3_N40_r0",
@@ -184,9 +192,9 @@
       "vc_ratio": 1.4463276836158192,
       "vc_optimal": false,
       "ratio": 1.00732430928982,
-      "status": "open",
-      "elapsed_seconds": 20.29154340000241,
-      "ip_seconds": 13.708516899998358
+      "status": "suboptimal",
+      "elapsed_seconds": 21.896839599998202,
+      "ip_seconds": 14.14680380000209
     },
     {
       "name": "kr_p0.35_N40_r0",
@@ -219,8 +227,8 @@
       "vc_optimal": false,
       "ratio": 1.005221238938053,
       "status": "open",
-      "elapsed_seconds": 21.60475099999894,
-      "ip_seconds": 60.057769899998675
+      "elapsed_seconds": 22.820456100002048,
+      "ip_seconds": 60.05788819999725
     },
     {
       "name": "kr_eta0.1_N40_r0",
@@ -252,9 +260,9 @@
       "vc_ratio": 1.4683908045977012,
       "vc_optimal": false,
       "ratio": 1.0095983983040866,
-      "status": "open",
-      "elapsed_seconds": 18.223243000000366,
-      "ip_seconds": 10.039145099995949
+      "status": "suboptimal",
+      "elapsed_seconds": 18.779479099997843,
+      "ip_seconds": 10.072718300005363
     },
     {
       "name": "kr_linear_N40_r0",
@@ -286,9 +294,9 @@
       "vc_ratio": 1.5608308605341246,
       "vc_optimal": false,
       "ratio": 1.0116803658611953,
-      "status": "open",
-      "elapsed_seconds": 16.65417310000339,
-      "ip_seconds": 1.0698810999965644
+      "status": "suboptimal",
+      "elapsed_seconds": 17.19842079999944,
+      "ip_seconds": 1.0090609999970184
     },
     {
       "name": "kr_base_N40_r1",
@@ -320,9 +328,9 @@
       "vc_ratio": 1.5163204747774481,
       "vc_optimal": false,
       "ratio": 1.0106259541984732,
-      "status": "open",
-      "elapsed_seconds": 17.92670829999406,
-      "ip_seconds": 1.2846566999942297
+      "status": "suboptimal",
+      "elapsed_seconds": 18.413773200001742,
+      "ip_seconds": 1.2989031999968574
     },
     {
       "name": "kr_k3_N40_r1",
@@ -355,8 +363,8 @@
       "vc_optimal": false,
       "ratio": 1.0061849873488895,
       "status": "open",
-      "elapsed_seconds": 20.478584099997533,
-      "ip_seconds": 60.063790100000915
+      "elapsed_seconds": 21.366857699998945,
+      "ip_seconds": 60.06953580000118
     },
     {
       "name": "kr_p0.35_N40_r1",
@@ -388,9 +396,9 @@
       "vc_ratio": 1.25,
       "vc_optimal": false,
       "ratio": 1.0038055973995084,
-      "status": "open",
-      "elapsed_seconds": 24.655114900000626,
-      "ip_seconds": 52.33558250000351
+      "status": "suboptimal",
+      "elapsed_seconds": 25.62656219999917,
+      "ip_seconds": 52.458159100002376
     },
     {
       "name": "kr_eta0.1_N40_r1",
@@ -423,8 +431,8 @@
       "vc_optimal": false,
       "ratio": 1.011091912379466,
       "status": "open",
-      "elapsed_seconds": 19.52251619999879,
-      "ip_seconds": 60.59631149999768
+      "elapsed_seconds": 20.5425488999972,
+      "ip_seconds": 60.69148810000479
     },
     {
       "name": "kr_linear_N40_r1",
@@ -456,9 +464,9 @@
       "vc_ratio": 1.8664688427299703,
       "vc_optimal": false,
       "ratio": 1.0174714294261953,
-      "status": "open",
-      "elapsed_seconds": 18.115451600002416,
-      "ip_seconds": 2.1427178000012645
+      "status": "suboptimal",
+      "elapsed_seconds": 18.991558699999587,
+      "ip_seconds": 2.121996699999727
     },
     {
       "name": "reg3_n50_r0",
@@ -485,9 +493,9 @@
       "vc_ratio": 1.0357142857142858,
       "vc_optimal": false,
       "ratio": 1.0056179775280898,
-      "status": "open",
-      "elapsed_seconds": 7.293704399999115,
-      "ip_seconds": 0.034115800001018215
+      "status": "suboptimal",
+      "elapsed_seconds": 7.776291499998479,
+      "ip_seconds": 0.034330900001805276
     },
     {
       "name": "reg4_n50_r0",
@@ -514,9 +522,9 @@
       "vc_ratio": 1.0344827586206897,
       "vc_optimal": false,
       "ratio": 1.0043668122270741,
-      "status": "open",
-      "elapsed_seconds": 6.501144099995145,
-      "ip_seconds": 0.0232250999979442
+      "status": "suboptimal",
+      "elapsed_seconds": 6.958999700000277,
+      "ip_seconds": 0.02324629999930039
     },
     {
       "name": "reg5_n50_r0",
@@ -543,9 +551,9 @@
       "vc_ratio": 1.096774193548387,
       "vc_optimal": false,
       "ratio": 1.01067615658363,
-      "status": "open",
-      "elapsed_seconds": 7.0508413999996264,
-      "ip_seconds": 0.16266290000203298
+      "status": "suboptimal",
+      "elapsed_seconds": 7.343423699996492,
+      "ip_seconds": 0.1630922999975155
     },
     {
       "name": "reg3_n50_r1",
@@ -572,9 +580,9 @@
       "vc_ratio": 1.0357142857142858,
       "vc_optimal": false,
       "ratio": 1.0056179775280898,
-      "status": "open",
-      "elapsed_seconds": 7.201335899997503,
-      "ip_seconds": 0.01066460000583902
+      "status": "suboptimal",
+      "elapsed_seconds": 8.338223699996888,
+      "ip_seconds": 0.018090800003847107
     },
     {
       "name": "reg4_n50_r1",
@@ -601,9 +609,9 @@
       "vc_ratio": 1.0666666666666667,
       "vc_optimal": false,
       "ratio": 1.008695652173913,
-      "status": "open",
-      "elapsed_seconds": 6.735171899999841,
-      "ip_seconds": 0.033027099998435006
+      "status": "suboptimal",
+      "elapsed_seconds": 10.669965799999773,
+      "ip_seconds": 0.04243240000505466
     },
     {
       "name": "reg5_n50_r1",
@@ -630,9 +638,9 @@
       "vc_ratio": 1.09375,
       "vc_optimal": false,
       "ratio": 1.0106382978723405,
-      "status": "open",
-      "elapsed_seconds": 7.006135600000562,
-      "ip_seconds": 0.1043333999987226
+      "status": "suboptimal",
+      "elapsed_seconds": 10.935211799995159,
+      "ip_seconds": 0.16114559999550693
     },
     {
       "name": "reg3_n50_r2",
@@ -660,8 +668,8 @@
       "vc_optimal": true,
       "ratio": 1.0,
       "status": "optimal",
-      "elapsed_seconds": 7.21010920000117,
-      "ip_seconds": 0.03316110000014305
+      "elapsed_seconds": 11.751302900003793,
+      "ip_seconds": 0.07466310000017984
     },
     {
       "name": "reg4_n50_r2",
@@ -689,8 +697,8 @@
       "vc_optimal": true,
       "ratio": 1.0,
       "status": "optimal",
-      "elapsed_seconds": 6.540255200001411,
-      "ip_seconds": 0.05451320000429405
+      "elapsed_seconds": 10.685403100003896,
+      "ip_seconds": 0.0831423999989056
     },
     {
       "name": "reg5_n50_r2",
@@ -717,9 +725,9 @@
       "vc_ratio": 1.125,
       "vc_optimal": false,
       "ratio": 1.0141843971631206,
-      "status": "open",
-      "elapsed_seconds": 6.875913600000786,
-      "ip_seconds": 0.1475436999971862
+      "status": "suboptimal",
+      "elapsed_seconds": 11.153293199997279,
+      "ip_seconds": 0.20620320000307402
     },
     {
       "name": "reg3_n100_r0",
@@ -746,9 +754,9 @@
       "vc_ratio": 1.0892857142857142,
       "vc_optimal": false,
       "ratio": 1.0140449438202248,
-      "status": "open",
-      "elapsed_seconds": 6.139845400000922,
-      "ip_seconds": 0.14478070000041043
+      "status": "suboptimal",
+      "elapsed_seconds": 9.453247199999169,
+      "ip_seconds": 0.1902126999993925
     },
     {
       "name": "reg4_n100_r0",
@@ -775,9 +783,9 @@
       "vc_ratio": 1.1666666666666667,
       "vc_optimal": false,
       "ratio": 1.0217391304347827,
-      "status": "open",
-      "elapsed_seconds": 5.572442800003046,
-      "ip_seconds": 1.4611670000012964
+      "status": "suboptimal",
+      "elapsed_seconds": 8.951244000003499,
+      "ip_seconds": 2.4878698000029544
     },
     {
       "name": "reg5_n100_r0",
@@ -804,9 +812,9 @@
       "vc_ratio": 1.253968253968254,
       "vc_optimal": false,
       "ratio": 1.0284191829484903,
-      "status": "open",
-      "elapsed_seconds": 7.269113000002108,
-      "ip_seconds": 2.929601600000751
+      "status": "suboptimal",
+      "elapsed_seconds": 8.376824999999371,
+      "ip_seconds": 1.6288696999981767
     },
     {
       "name": "reg3_n100_r1",
@@ -833,9 +841,9 @@
       "vc_ratio": 1.0892857142857142,
       "vc_optimal": false,
       "ratio": 1.0140449438202248,
-      "status": "open",
-      "elapsed_seconds": 6.18340580000222,
-      "ip_seconds": 0.12484479999693576
+      "status": "suboptimal",
+      "elapsed_seconds": 6.2519556999977794,
+      "ip_seconds": 0.1208796999999322
     },
     {
       "name": "reg4_n100_r1",
@@ -862,9 +870,9 @@
       "vc_ratio": 1.1333333333333333,
       "vc_optimal": false,
       "ratio": 1.017391304347826,
-      "status": "open",
-      "elapsed_seconds": 5.444903800002066,
-      "ip_seconds": 1.084347500000149
+      "status": "suboptimal",
+      "elapsed_seconds": 5.65849739999976,
+      "ip_seconds": 1.0798601999995299
     },
     {
       "name": "reg5_n100_r1",
@@ -891,9 +899,9 @@
       "vc_ratio": 1.1904761904761905,
       "vc_optimal": false,
       "ratio": 1.0230905861456483,
-      "status": "open",
-      "elapsed_seconds": 5.353384300004109,
-      "ip_seconds": 1.584103299996059
+      "status": "suboptimal",
+      "elapsed_seconds": 5.655917000003683,
+      "ip_seconds": 1.5767886999965413
     },
     {
       "name": "reg3_n100_r2",
@@ -920,9 +928,9 @@
       "vc_ratio": 1.0526315789473684,
       "vc_optimal": false,
       "ratio": 1.0084033613445378,
-      "status": "open",
-      "elapsed_seconds": 6.099418300000252,
-      "ip_seconds": 0.3407137000031071
+      "status": "suboptimal",
+      "elapsed_seconds": 6.406789399996342,
+      "ip_seconds": 0.3432641999970656
     },
     {
       "name": "reg4_n100_r2",
@@ -949,9 +957,9 @@
       "vc_ratio": 1.0819672131147542,
       "vc_optimal": false,
       "ratio": 1.0108459869848156,
-      "status": "open",
-      "elapsed_seconds": 5.37818839999818,
-      "ip_seconds": 0.9270812999966438
+      "status": "suboptimal",
+      "elapsed_seconds": 5.749892400002864,
+      "ip_seconds": 0.9186021000059554
     },
     {
       "name": "reg5_n100_r2",
@@ -978,9 +986,9 @@
       "vc_ratio": 1.2222222222222223,
       "vc_optimal": false,
       "ratio": 1.024866785079929,
-      "status": "open",
-      "elapsed_seconds": 5.402354499994544,
-      "ip_seconds": 1.9112152000016067
+      "status": "suboptimal",
+      "elapsed_seconds": 5.731097199997748,
+      "ip_seconds": 1.9041446000046562
     },
     {
       "name": "reg3_n200_r0",
@@ -1007,9 +1015,9 @@
       "vc_ratio": 1.1891891891891893,
       "vc_optimal": false,
       "ratio": 1.029535864978903,
-      "status": "open",
-      "elapsed_seconds": 4.809587000003376,
-      "ip_seconds": 3.445687799998268
+      "status": "suboptimal",
+      "elapsed_seconds": 5.084702599997399,
+      "ip_seconds": 3.411833799997112
     },
     {
       "name": "reg4_n200_r0",
@@ -1037,8 +1045,8 @@
       "vc_optimal": false,
       "ratio": 1.0359869138495092,
       "status": "open",
-      "elapsed_seconds": 4.308499999999185,
-      "ip_seconds": 60.01499990000593
+      "elapsed_seconds": 4.57206519999454,
+      "ip_seconds": 60.0119024999949
     },
     {
       "name": "reg5_n200_r0",
@@ -1066,8 +1074,8 @@
       "vc_optimal": false,
       "ratio": 1.033065236818588,
       "status": "open",
-      "elapsed_seconds": 4.11161799999536,
-      "ip_seconds": 60.03787260000536
+      "elapsed_seconds": 4.440478900003654,
+      "ip_seconds": 60.02840609999839
     },
     {
       "name": "reg3_n200_r1",
@@ -1094,9 +1102,9 @@
       "vc_ratio": 1.1981981981981982,
       "vc_optimal": false,
       "ratio": 1.030942334739803,
-      "status": "open",
-      "elapsed_seconds": 4.754486099998758,
-      "ip_seconds": 5.628364899996086
+      "status": "suboptimal",
+      "elapsed_seconds": 5.065435800002888,
+      "ip_seconds": 5.691577899997355
     },
     {
       "name": "reg4_n200_r1",
@@ -1123,9 +1131,9 @@
       "vc_ratio": 1.2605042016806722,
       "vc_optimal": false,
       "ratio": 1.0337323177366704,
-      "status": "open",
-      "elapsed_seconds": 4.286646300002758,
-      "ip_seconds": 25.26267039999948
+      "status": "suboptimal",
+      "elapsed_seconds": 4.570185600001423,
+      "ip_seconds": 25.407664099999238
     },
     {
       "name": "reg5_n200_r1",
@@ -1153,8 +1161,8 @@
       "vc_optimal": false,
       "ratio": 1.0375,
       "status": "open",
-      "elapsed_seconds": 4.203663499996765,
-      "ip_seconds": 60.01298270000552
+      "elapsed_seconds": 4.554509000001417,
+      "ip_seconds": 60.010945599999104
     },
     {
       "name": "reg3_n200_r2",
@@ -1181,9 +1189,9 @@
       "vc_ratio": 1.1875,
       "vc_optimal": false,
       "ratio": 1.029494382022472,
-      "status": "open",
-      "elapsed_seconds": 4.780506199997035,
-      "ip_seconds": 4.196742599997378
+      "status": "suboptimal",
+      "elapsed_seconds": 5.188422999999602,
+      "ip_seconds": 4.268562600002042
     },
     {
       "name": "reg4_n200_r2",
@@ -1210,9 +1218,9 @@
       "vc_ratio": 1.2796610169491525,
       "vc_optimal": false,
       "ratio": 1.0359477124183007,
-      "status": "open",
-      "elapsed_seconds": 4.356804600000032,
-      "ip_seconds": 9.68982629999664
+      "status": "suboptimal",
+      "elapsed_seconds": 4.803576199999952,
+      "ip_seconds": 9.81771899999876
     },
     {
       "name": "reg5_n200_r2",
@@ -1240,8 +1248,8 @@
       "vc_optimal": false,
       "ratio": 1.0366071428571428,
       "status": "open",
-      "elapsed_seconds": 4.149798399994324,
-      "ip_seconds": 60.01215129999764
+      "elapsed_seconds": 4.554733500001021,
+      "ip_seconds": 60.01382549999835
     },
     {
       "name": "sc_B4_s30_r0",
@@ -1264,8 +1272,8 @@
       "sc_ip_optimal": true,
       "ratio": 1.0,
       "status": "optimal",
-      "elapsed_seconds": 3.992156200001773,
-      "ip_seconds": 0.017806999996537343
+      "elapsed_seconds": 1.6177848999941489,
+      "ip_seconds": 0.021384200001193676
     },
     {
       "name": "sc_B5_s30_r0",
@@ -1288,8 +1296,8 @@
       "sc_ip_optimal": true,
       "ratio": 1.0,
       "status": "optimal",
-      "elapsed_seconds": 3.8824229999954696,
-      "ip_seconds": 0.019434300003922544
+      "elapsed_seconds": 1.4033884000018588,
+      "ip_seconds": 0.019379799996386282
     },
     {
       "name": "sc_B6_s30_r0",
@@ -1312,8 +1320,8 @@
       "sc_ip_optimal": true,
       "ratio": 1.0,
       "status": "optimal",
-      "elapsed_seconds": 3.593785500001104,
-      "ip_seconds": 0.054986499999358784
+      "elapsed_seconds": 1.7293549000023631,
+      "ip_seconds": 0.05268449999857694
     },
     {
       "name": "sc_B4_s30_r1",
@@ -1336,8 +1344,8 @@
       "sc_ip_optimal": true,
       "ratio": 1.0,
       "status": "optimal",
-      "elapsed_seconds": 4.057766699996137,
-      "ip_seconds": 0.023176500006229617
+      "elapsed_seconds": 1.3858976999981678,
+      "ip_seconds": 0.0233894999983022
     },
     {
       "name": "sc_B5_s30_r1",
@@ -1360,8 +1368,8 @@
       "sc_ip_optimal": true,
       "ratio": 1.0,
       "status": "optimal",
-      "elapsed_seconds": 3.826261299996986,
-      "ip_seconds": 0.02429590000247117
+      "elapsed_seconds": 1.4959252999979071,
+      "ip_seconds": 0.025073700002394617
     },
     {
       "name": "sc_B6_s30_r1",
@@ -1384,8 +1392,8 @@
       "sc_ip_optimal": true,
       "ratio": 1.0,
       "status": "optimal",
-      "elapsed_seconds": 3.653916900002514,
-      "ip_seconds": 0.04508009999699425
+      "elapsed_seconds": 1.5857669000033638,
+      "ip_seconds": 0.04718610000418266
     },
     {
       "name": "sc_B4_s30_r2",
@@ -1408,8 +1416,8 @@
       "sc_ip_optimal": true,
       "ratio": 1.0,
       "status": "optimal",
-      "elapsed_seconds": 4.0658152000032715,
-      "ip_seconds": 0.012039799999911338
+      "elapsed_seconds": 1.358095499999763,
+      "ip_seconds": 0.012536299997009337
     },
     {
       "name": "sc_B5_s30_r2",
@@ -1432,8 +1440,8 @@
       "sc_ip_optimal": true,
       "ratio": 1.0,
       "status": "optimal",
-      "elapsed_seconds": 3.8466291000004276,
-      "ip_seconds": 0.027919799998926464
+      "elapsed_seconds": 1.5163154999972903,
+      "ip_seconds": 0.028817099999287166
     },
     {
       "name": "sc_B6_s30_r2",
@@ -1456,8 +1464,8 @@
       "sc_ip_optimal": true,
       "ratio": 1.0,
       "status": "optimal",
-      "elapsed_seconds": 3.586668000003556,
-      "ip_seconds": 0.05123930000263499
+      "elapsed_seconds": 1.7445848000061233,
+      "ip_seconds": 0.05182040000363486
     },
     {
       "name": "sc_B4_s60_r0",
@@ -1480,8 +1488,8 @@
       "sc_ip_optimal": true,
       "ratio": 1.0,
       "status": "optimal",
-      "elapsed_seconds": 7.658751100003428,
-      "ip_seconds": 0.08744230000593234
+      "elapsed_seconds": 8.040866000003007,
+      "ip_seconds": 0.08426309999777004
     },
     {
       "name": "sc_B5_s60_r0",
@@ -1504,8 +1512,8 @@
       "sc_ip_optimal": true,
       "ratio": 1.0,
       "status": "optimal",
-      "elapsed_seconds": 7.022986899995885,
-      "ip_seconds": 0.12407610000082059
+      "elapsed_seconds": 7.434497900001588,
+      "ip_seconds": 0.12007849999645259
     },
     {
       "name": "sc_B6_s60_r0",
@@ -1528,8 +1536,8 @@
       "sc_ip_optimal": true,
       "ratio": 1.0,
       "status": "optimal",
-      "elapsed_seconds": 6.509893000002194,
-      "ip_seconds": 0.2944774999996298
+      "elapsed_seconds": 7.061029999997118,
+      "ip_seconds": 0.2654206000006525
     },
     {
       "name": "sc_B4_s60_r1",
@@ -1552,8 +1560,8 @@
       "sc_ip_optimal": true,
       "ratio": 1.0,
       "status": "optimal",
-      "elapsed_seconds": 7.373097600000619,
-      "ip_seconds": 0.11767179999878863
+      "elapsed_seconds": 8.140878400001384,
+      "ip_seconds": 0.10767689999920549
     },
     {
       "name": "sc_B5_s60_r1",
@@ -1576,8 +1584,8 @@
       "sc_ip_optimal": true,
       "ratio": 1.0,
       "status": "optimal",
-      "elapsed_seconds": 7.001175299999886,
-      "ip_seconds": 0.2573379000023124
+      "elapsed_seconds": 7.702358400005323,
+      "ip_seconds": 0.2681282999983523
     },
     {
       "name": "sc_B6_s60_r1",
@@ -1600,8 +1608,8 @@
       "sc_ip_optimal": true,
       "ratio": 1.0,
       "status": "optimal",
-      "elapsed_seconds": 6.532351000001654,
-      "ip_seconds": 0.2895658999987063
+      "elapsed_seconds": 7.06775639999978,
+      "ip_seconds": 0.2902563000025111
     },
     {
       "name": "sc_B4_s60_r2",
@@ -1624,8 +1632,8 @@
       "sc_ip_optimal": true,
       "ratio": 1.0,
       "status": "optimal",
-      "elapsed_seconds": 7.4420709000041825,
-      "ip_seconds": 0.09397999999782769
+      "elapsed_seconds": 8.08308450000186,
+      "ip_seconds": 0.09846149999793852
     },
     {
       "name": "sc_B5_s60_r2",
@@ -1648,8 +1656,8 @@
       "sc_ip_optimal": true,
       "ratio": 1.0,
       "status": "optimal",
-      "elapsed_seconds": 6.876032799998939,
-      "ip_seconds": 0.16313929999887478
+      "elapsed_seconds": 7.560096100001829,
+      "ip_seconds": 0.15340839999407763
     },
     {
       "name": "sc_B6_s60_r2",
@@ -1672,9 +1680,9 @@
       "sc_ip_optimal": true,
       "ratio": 1.0,
       "status": "optimal",
-      "elapsed_seconds": 6.561545299999125,
-      "ip_seconds": 0.247952500001702
+      "elapsed_seconds": 6.952723399997922,
+      "ip_seconds": 0.25071570000000065
     }
   ],
-  "elapsed_seconds": 1034.5660877227783
+  "elapsed_seconds": 1061.5423398017883
 }
