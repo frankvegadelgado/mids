@@ -42,8 +42,8 @@ An **independent dominating set** in a graph $G = (V, E)$ is a subset $D \subset
 
 1. **Greedy Algorithm**:
 
-   - Builds a degree-four auxiliary graph, repairs the two lifted vertex seeds into maximal independent sets, and selects the smallest verified candidate.
-   - Provides the implementation studied in the constant-approximation certificate theorem.
+   - Processes a work-list of connected subgraphs. For each one it builds a maximum spanning tree (NetworkX), solves MIDS exactly on that tree with a linear-time dynamic program, keeps the tree solution's vertices that stay independent in the subgraph, removes them and their neighbours, and pushes the remaining connected components back on the work-list.
+   - Always returns a verified independent dominating set and is exact on forests.
 
 2. **Integer Linear Programming (ILP)**:
 
@@ -256,14 +256,6 @@ options:
 # Code
 
 - Python implementation by **Frank Vega**.
-
----
-
-# Complexity
-
-```diff
-+ Siriaisa separates feasibility from the approximation certificate: every returned set is verified as independent and dominating, while a universal proof of the constant-approximation certificate would imply P = NP by known MIDS inapproximability results.
-```
 
 ---
 
