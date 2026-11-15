@@ -1,4 +1,4 @@
-"""car/ cubic study: Siriaisa 0.0.8 on cubic and subcubic graphs.
+"""car/ cubic study: Siriaisa 0.0.9 on cubic and subcubic graphs.
 
 MIDS is APX-hard on cubic graphs (Bazgan, Brankovic, Casel and Fernau, DAM 2020,
 via Manlove's reduction), NP-hard on cubic planar graphs (Manlove, DAM 1999) and

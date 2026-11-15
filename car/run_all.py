@@ -22,7 +22,7 @@ Outputs
 -------
     the console                       the output of each script, as it is produced
     results/run_all/<script>.log      the same output, one file per script
-    results/run_all_summary.csv       one row per script: name, status, exit code,
+    results/run_all/summary.csv       one row per script: name, status, exit code,
                                       seconds, log file
 """
 
@@ -107,7 +107,7 @@ def main() -> None:
         extra = quick_args if args.quick else default_args
         rows.append(run_script(name, extra, args.keep_going))
 
-    summary = RESULTS_DIR / "run_all_summary.csv"
+    summary = LOG_DIR / "summary.csv"
     with open(summary, "w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=["script", "status", "exit_code", "seconds", "log"])
         writer.writeheader()

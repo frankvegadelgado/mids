@@ -1,6 +1,6 @@
 """car/ splitting study: the splitting excess s(G) of strategy c13 on hard and structured families.
 
-Strategy c13 of Siriaisa 0.0.8 (siriaisa/degree_split.py) replaces every vertex of
+Strategy c13 of Siriaisa 0.0.9 (siriaisa/degree_split.py) replaces every vertex of
 degree larger than k = floor(sqrt(n)) by unconnected copies, each joined to at
 most k of its neighbours, solves the copy graph H with three inner solvers, maps
 the solution back (owner set S_0) and repairs it. The paper proves

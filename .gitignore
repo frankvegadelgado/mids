@@ -175,3 +175,5 @@ app.log
 sparse_matrix_*
 experiment/
 docs/paper/
+# console logs and summary of car/run_all.py
+car/results/run_all/

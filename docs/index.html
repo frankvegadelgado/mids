@@ -76,10 +76,11 @@
 <h2>Algorithms:</h2>
 <ol>
 <li>
-<p><strong>Greedy Algorithm</strong>:</p>
+<p><strong>Siriaisa (version 0.0.9)</strong>:</p>
 <ul>
-<li>Processes a work-list of connected subgraphs. For each one it builds a maximum spanning tree (NetworkX), solves MIDS exactly on that tree with a linear-time dynamic program, keeps the tree solution's vertices that stay independent in the subgraph, removes them and their neighbours, and pushes the remaining connected components back on the work-list.</li>
-<li>Always returns a verified independent dominating set and is exact on forests.</li>
+<li>An ensemble of eighteen strategies. Thirteen base strategies: spanning-tree peeling, the endpoints of a minimum maximal matching, a max-gain greedy, a star-forest reduction, Min-to-Min, a primal-dual method, BFS and DFS spanning forests, induced-forest layers, a forest core re-solved exactly, feedback-core peeling, the Caro-Wei minimum-degree greedy, and degree splitting at <code>floor(sqrt(n))</code>. Five improvers: a union re-prune, a weighted swap search, reduce-and-search with a forest large-neighbourhood search, consensus forcing, and a final refinement of every candidate.</li>
+<li>Every exact subproblem is a forest, solved by a linear-time tree dynamic program, and every candidate is repaired into an independent dominating set.</li>
+<li>Always returns a verified independent dominating set, is optimal on forests, and runs in <code>O(n + m)</code> time for the default parameters.</li>
 </ul>
 </li>
 <li>

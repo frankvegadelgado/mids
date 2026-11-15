@@ -1,4 +1,4 @@
-"""car/ circle-graph study: the splitting excess s(G) and Siriaisa 0.0.8 on circle graphs.
+"""car/ circle-graph study: the splitting excess s(G) and Siriaisa 0.0.9 on circle graphs.
 
 MIDS is NP-complete on circle graphs and, unless P = NP, not approximable within
 n^eps for any eps < 1 (Damian-Iordache and Pemmaraju, ISAAC 1999). The paper proves

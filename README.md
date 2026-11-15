@@ -40,10 +40,11 @@ An **independent dominating set** in a graph $G = (V, E)$ is a subset $D \subset
 
 ## Algorithms:
 
-1. **Greedy Algorithm**:
+1. **Siriaisa (version 0.0.9)**:
 
-   - Processes a work-list of connected subgraphs. For each one it builds a maximum spanning tree (NetworkX), solves MIDS exactly on that tree with a linear-time dynamic program, keeps the tree solution's vertices that stay independent in the subgraph, removes them and their neighbours, and pushes the remaining connected components back on the work-list.
-   - Always returns a verified independent dominating set and is exact on forests.
+   - An ensemble of eighteen strategies. Thirteen base strategies: spanning-tree peeling, the endpoints of a minimum maximal matching, a max-gain greedy, a star-forest reduction, Min-to-Min, a primal-dual method, BFS and DFS spanning forests, induced-forest layers, a forest core re-solved exactly, feedback-core peeling, the Caro-Wei minimum-degree greedy, and degree splitting at `floor(sqrt(n))`. Five improvers: a union re-prune, a weighted swap search, reduce-and-search with a forest large-neighbourhood search, consensus forcing, and a final refinement of every candidate.
+   - Every exact subproblem is a forest, solved by a linear-time tree dynamic program, and every candidate is repaired into an independent dominating set.
+   - Always returns a verified independent dominating set, is optimal on forests, and runs in `O(n + m)` time for the default parameters.
 
 2. **Integer Linear Programming (ILP)**:
 

@@ -7,7 +7,7 @@ The paper proves (Proposition "Splitting excess on graph families"(a)) that ever
 graph with Delta <= B and n >= B^2 has s(G) = 0: strategy c13 splits nothing and runs
 its inner solvers on G itself. These graphs are the family on which the splitting
 excess is feasible (zero) while the hardness factor grows linearly with the degree
-bound. This script runs Siriaisa 0.0.8 on them for B = 4, 8, 16, 32, always with
+bound. This script runs Siriaisa 0.0.9 on them for B = 4, 8, 16, 32, always with
 n >= B^2, and asserts on every instance (an AssertionError stops the script):
 
 * s(G) = 0 (Proposition "Splitting excess on graph families"(a));
