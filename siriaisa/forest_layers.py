@@ -1,5 +1,5 @@
-# Version: v0.0.8
-# Created on 31/10/2026
+# Version: v0.0.9
+# Modified on 14/11/2026
 # Author: Frank Vega
 
 """Strategy c9: induced-forest layers, solved one after another (Salvador's c9 adapted to MIDS).
@@ -14,9 +14,11 @@ Layers. The vertices of a component are scanned in ascending-degree order
 lie in pairwise different trees of layer 0 (union-find with union by size and
 path halving), so that layer 0 stays an
 induced forest; the rejected vertices are scanned the same way to build layer 1,
-and so on. Every vertex lies in exactly one layer, and every layer induces a forest
-of ``G``. The layering has a work budget of ``budget * (n + m)``; the vertices not
-placed when it runs out are left to the greedy completion.
+and so on. Every placed vertex lies in exactly one layer, and every layer induces a
+forest of ``G``. The layering has a work budget of ``budget * (n + m)``, and every
+pointer step of a find is charged to a second counter limited to
+``FIND_FACTOR * budget * (n + m)`` steps; the vertices not placed when either
+runs out are left to the greedy completion.
 
 Solving an order. The layers are processed in an order; in layer ``t`` the vertices
 already dominated (by vertices selected in earlier layers of the order) are
@@ -33,7 +35,8 @@ for ``L`` layers), and otherwise ``max_orders`` orders (the natural order, the
 reverse order, then the rotations of both), and the smallest set is kept.
 
 On a component that is a tree there is a single layer, and c9 is optimal on it
-(reported as ``exact``). Running time ``O(budget * (n + m) + max_orders * (n + m))``,
+(reported as ``exact``). Running time
+``O((1 + FIND_FACTOR) * budget * (n + m) + max_orders * (n + m))`` in the worst case,
 linear for the fixed defaults.
 """
 
@@ -46,6 +49,8 @@ from .local_search import _greedy_fill
 
 #: Work budget of the layering, in units of (n + m).
 DEFAULT_LAYER_BUDGET: float = 8.0
+#: Pointer steps allowed to the union-find, as a multiple of the work budget.
+FIND_FACTOR: float = 8.0
 #: Largest number of layer orders tried per component.
 DEFAULT_MAX_ORDERS: int = 6
 
@@ -132,22 +137,31 @@ def forest_mids(adj: list[list[int]], verts: list[int], inside: list[int], token
 # ---------------------------------------------------------------------------
 
 
-def _find(parent: list[int], x: int) -> int:
+def _find(parent: list[int], x: int, steps: list[int]) -> int:
+    """Root of ``x`` with path halving; every pointer step adds one to ``steps[0]``."""
     while parent[x] != x:
         parent[x] = parent[parent[x]]
         x = parent[x]
+        steps[0] += 1
     return x
 
 
 def forest_layers(adj: list[list[int]], comp: list[int], layer_of: list[int], uf: list[int],
                   mark: list[int], work: list[float], limit: float,
-                  size: list[int] | None = None) -> tuple[list[list[int]], list[int]]:
+                  size: list[int] | None = None, steps: list[int] | None = None,
+                  find_limit: float = _INF) -> tuple[list[list[int]], list[int]]:
     """Layers of the component ``comp`` (each an induced forest) and the vertices left
-    unplaced when the work budget runs out. ``layer_of``, ``uf`` and ``mark`` are scratch
-    arrays of length n (``layer_of`` initialised to -1, ``mark`` to 0); ``size`` (scratch, length
-    n) holds the tree sizes for union by size (with path halving: ``O(alpha(n))`` per operation)."""
+    unplaced when the work budget or the find counter runs out. ``layer_of``, ``uf`` and
+    ``mark`` are scratch arrays of length n (``layer_of`` initialised to -1, ``mark`` to 0);
+    ``size`` (scratch, length n) holds the tree sizes for union by size. ``steps[0]`` counts the
+    pointer steps of the finds (path halving); when it exceeds ``find_limit`` the layer under
+    construction is closed with the vertices accepted so far (an induced forest) and the
+    vertices not accepted are returned as unplaced, so the cost is
+    ``O(work charged + find_limit)`` in the worst case."""
     if size is None:
         size = [1] * len(adj)
+    if steps is None:
+        steps = [0]
     max_deg = max(len(adj[v]) for v in comp)
     buckets: list[list[int]] = [[] for _ in range(max_deg + 1)]
     for v in comp:
@@ -164,13 +178,19 @@ def forest_layers(adj: list[list[int]], comp: list[int], layer_of: list[int], uf
         t = len(layers)
         layer: list[int] = []
         rejected: list[int] = []
-        for v in remaining:
+        for i, v in enumerate(remaining):
             token += 1
             roots = []
             ok = True
             for y in adj[v]:
                 if layer_of[y] == t:
-                    r = _find(uf, y)
+                    r = _find(uf, y, steps)
+                    if steps[0] > find_limit:
+                        # Find counter exhausted (tested after every find): close the layer with
+                        # the vertices accepted so far; v and the rest are left unplaced.
+                        if layer:
+                            layers.append(layer)
+                        return layers, rejected + remaining[i:]
                     if mark[r] == token:
                         ok = False
                         break
@@ -240,6 +260,8 @@ def forest_layers_ids(adj: list[list[int]], comp_of: list[int], budget: float = 
     inside = [0] * n
     work = [float(n + m)]
     limit = budget * (n + m)
+    steps = [0]
+    find_limit = FIND_FACTOR * limit
     in_s = [False] * n
     dominated = [False] * n
     stats = {"max_layers": 0, "layers": 0, "orders": 0, "unplaced": 0, "exact": True}
@@ -250,7 +272,7 @@ def forest_layers_ids(adj: list[list[int]], comp_of: list[int], budget: float = 
             in_s[comp[0]] = True
             dominated[comp[0]] = True
             continue
-        layers, rest = forest_layers(adj, comp, layer_of, uf, mark, work, limit, size)
+        layers, rest = forest_layers(adj, comp, layer_of, uf, mark, work, limit, size, steps, find_limit)
         L = len(layers)
         for t, layer in enumerate(layers):
             if t == len(global_layers):
@@ -288,5 +310,6 @@ def forest_layers_ids(adj: list[list[int]], comp_of: list[int], budget: float = 
             in_s[v] = True
     if info is not None:
         info.update(stats)
+        info["find_steps"] = steps[0]
         info["layer_lists"] = global_layers
     return in_s

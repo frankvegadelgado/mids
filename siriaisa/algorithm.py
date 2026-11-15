@@ -1,10 +1,10 @@
-# Version: v0.0.8
-# Modified on 31/10/2026
+# Version: v0.0.9
+# Modified on 14/11/2026
 # Author: Frank Vega
 
 """
 Ensemble heuristic for the Minimum Independent Dominating Set (MIDS) problem
-(Siriaisa, version 0.0.8).
+(Siriaisa, version 0.0.9).
 
 An independent dominating set is exactly a maximal independent set.
 :func:`find_independent_dominating_set` runs the ensemble of Salvador 0.1.4
@@ -21,10 +21,11 @@ pruning and of the MaximizeSolution pass of Salvador and Esperanza).
 
 Base strategies
 
-* c1  -- spanning-tree peeling (Siriaisa 0.0.7, now linear): round by round,
-  a maximum spanning forest of the residual graph (edge weight deg(u) + deg(v),
-  Kruskal with the edges bucket-sorted by their integer weights) solved by the
-  tree DP, an independent subset kept, it and its neighbours removed.
+* c1  -- spanning-tree peeling: round by round, a maximum spanning forest of
+  the residual graph (edge weight deg(u) + deg(v), Kruskal with the edges
+  bucket-sorted by their integer weights, the pointer steps of the union-find
+  charged to a linear work counter) solved by the tree DP, an independent
+  subset kept, it and its neighbours removed.
 * c2  -- maximal matching (Hvala/Salvador c2): the endpoints of the NetworkX
   minimum maximal matching dominate the graph; repaired and completed.
 * c3  -- max-gain greedy (Hvala/Salvador c3): the undominated vertex that
@@ -92,14 +93,15 @@ solved by the exact forest solver with the ensemble as context.
 
 Running time: no step uses a comparison sort (every sort is a counting sort
 on integer keys at most n + m); c1 (Kruskal on bucket-sorted edges) and c9
-(layering) use union-find with union by size and path halving, so they cost
-``O((n + m) alpha(n))`` within their work budgets (``alpha`` the inverse
-Ackermann function, as in Salvador's c1); every other base strategy is
-``O(n + m)``; the improvers have fixed work budgets in units of ``n + m``
-plus a constant floor. With the default parameters the whole ensemble runs in
-``O((n + m) alpha(n))`` time, linear up to the inverse Ackermann factor
-(expected time, for the hash tables of vertex labels and of c11's residual
-multigraph).
+(layering) use union-find with union by size and path halving, and every
+pointer step of a find is charged to a counter limited to
+``FIND_FACTOR * budget * (n + m)`` steps (``budget`` the work budget of the
+strategy, in units of ``n + m``): when the counter runs out the strategy stops
+as it does when its work budget runs out, so c1 and c9 are ``O(n + m)`` in the
+worst case; every other base strategy is ``O(n + m)``; the improvers have fixed
+work budgets in units of ``n + m`` plus a constant floor. With the default
+parameters the whole ensemble runs in ``O(n + m)`` time, linear (expected time,
+for the hash tables of vertex labels and of c11's residual multigraph).
 
 MIDS is NP-hard, also on bipartite graphs, and hard to approximate in general;
 on forests c1, c9, c10 and c11 (hence c18) are optimal.
@@ -124,6 +126,8 @@ _FREE = 2  # v is not in the set, not dominated by children (parent must be in)
 
 #: Spanning-tree peeling budget (c1), in units of (n + m).
 DEFAULT_TREE_BUDGET: float = 40.0
+#: Pointer steps allowed to the union-find of c1 and of c9, as a multiple of their work budgets.
+FIND_FACTOR: float = forest_layers.FIND_FACTOR
 #: Induced-forest layering budget (c9), in units of (n + m), and layer orders tried per component.
 DEFAULT_LAYER_BUDGET: float = forest_layers.DEFAULT_LAYER_BUDGET
 DEFAULT_LAYER_ORDERS: int = forest_layers.DEFAULT_MAX_ORDERS
@@ -310,17 +314,18 @@ def tree_minimum_independent_dominating_set(T: nx.Graph) -> Set[Hashable]:
 # ---------------------------------------------------------------------------
 
 
-def _find(parent: List[int], x: int) -> int:
+def _find(parent: List[int], x: int, steps: List[int]) -> int:
+    """Root of ``x`` with path halving; every pointer step adds one to ``steps[0]``."""
     while parent[x] != x:
         parent[x] = parent[parent[x]]
         x = parent[x]
+        steps[0] += 1
     return x
 
 
 def spanning_tree_peeling(adj: List[List[int]], tree_budget: float = DEFAULT_TREE_BUDGET,
-                          info: Optional[dict] = None) -> List[int]:
-    """Strategy c1 on the index graph ``adj``: the spanning-tree peeling of version 0.0.7 in
-    linear time.
+                          info: Optional[dict] = None, find_factor: float = FIND_FACTOR) -> List[int]:
+    """Strategy c1 on the index graph ``adj``: the spanning-tree peeling, in linear time.
 
     Round by round, on the residual graph ``R`` (initially ``G``): a maximum spanning forest
     of ``R`` (edge weight ``deg_R(u) + deg_R(v)``) is computed by Kruskal's algorithm with the
@@ -328,16 +333,22 @@ def spanning_tree_peeling(adj: List[List[int]], tree_budget: float = DEFAULT_TRE
     is a counting sort) and a union-find structure with union by size and path halving; the
     forest is solved exactly by the tree DP; a maximal ``G``-independent subset of the forest
     optimum is kept, vertices of larger residual degree first (counting sort); the kept
-    vertices and their neighbours are removed and the next round works on what is left. This
-    is the 0.0.7 loop (one maximum spanning tree per component per round) without the
-    ``O(m log m)`` comparison sort. A round costs ``O((n_R + m_R) alpha(n))``; the rounds stop
-    when the total work would exceed ``tree_budget * (n + m)``, and the vertices left then
-    (undominated, not adjacent to the kept set) are left to the completion pass. Worst case
-    ``O((n + m) alpha(n))``. Returns the kept vertices (independent). ``info`` receives
-    ``iterations`` (rounds) and ``exhausted``."""
+    vertices and their neighbours are removed and the next round works on what is left.
+
+    Two counters bound the work. A round is charged ``4 (n_R + m_R)`` units, and the rounds
+    stop when the total would exceed ``tree_budget * (n + m)``. Every pointer step of a find
+    is charged to a second counter; when it exceeds ``find_factor * tree_budget * (n + m)``
+    Kruskal's algorithm stops adding edges (the edges added so far are a forest of ``R``),
+    the round is finished on that forest and it is the last round. The vertices left when the
+    rounds stop (undominated, not adjacent to the kept set) are left to the completion pass.
+    Apart from the finds, a round costs ``O(n_R + m_R)``, so the worst case is ``O(n + m)``.
+    Returns the kept vertices (independent). ``info`` receives ``iterations`` (rounds),
+    ``exhausted`` and ``find_steps``."""
     n = len(adj)
     m = sum(len(a) for a in adj) // 2
     limit = tree_budget * (n + m)
+    find_limit = find_factor * limit
+    steps = [0]
     work = float(n + m)
     alive = [True] * n
     rest = list(range(n))
@@ -371,7 +382,7 @@ def spanning_tree_peeling(adj: List[List[int]], tree_budget: float = DEFAULT_TRE
             fadj[v] = []
         for b in reversed(buckets):
             for u, v in b:
-                ru, rv = _find(parent, u), _find(parent, v)
+                ru, rv = _find(parent, u, steps), _find(parent, v, steps)
                 if ru != rv:
                     if size[ru] < size[rv]:
                         ru, rv = rv, ru
@@ -379,6 +390,11 @@ def spanning_tree_peeling(adj: List[List[int]], tree_budget: float = DEFAULT_TRE
                     size[ru] += size[rv]
                     fadj[u].append(v)
                     fadj[v].append(u)
+                if steps[0] > find_limit:
+                    exhausted = True
+                    break
+            if exhausted:
+                break
         # Exact MIDS of the forest (index lists with the forest adjacency).
         for v in rest:
             inside[v] = rounds
@@ -400,8 +416,10 @@ def spanning_tree_peeling(adj: List[List[int]], tree_budget: float = DEFAULT_TRE
             for y in adj[v]:
                 alive[y] = False
         rest = [v for v in rest if alive[v]]
+        if exhausted:  # the find counter ran out: this was the last round
+            break
     if info is not None:
-        info.update({"iterations": rounds, "exhausted": exhausted})
+        info.update({"iterations": rounds, "exhausted": exhausted, "find_steps": steps[0]})
     return kept_all
 
 
@@ -452,14 +470,22 @@ def final_candidates(
     final_floor: int = DEFAULT_FINAL_FLOOR,
     return_refined: bool = False,
     info: Optional[dict] = None,
+    lower_bound: Optional[int] = None,
 ):
-    """Every strategy of Siriaisa 0.0.8 (``c1``...``c18``) by name, as sets of vertices of
+    """Every strategy of Siriaisa 0.0.9 (``c1``...``c18``) by name, as sets of vertices of
     ``graph``; ``c18`` is the returned solution and ``|c18| <= min(|c1|, ..., |c17|)``.
 
     With ``return_refined=True`` the result is ``(candidates, refined)``, where
     ``refined[name]`` is the c18 refinement of candidate ``name``. ``info`` (optional dict)
-    receives diagnostics prefixed by the strategy. Running time ``O((n + m) alpha(n))`` for the
-    default parameters.
+    receives diagnostics prefixed by the strategy. Running time ``O(n + m)`` for the default
+    parameters.
+
+    ``lower_bound`` (optional) is a lower bound on the minimum independent dominating set size
+    known to the caller; it is combined with the certified bound ``sum ceil(n_c / (Delta_c + 1))``
+    (the larger is used). When the smallest of ``c1``...``c13`` has at most that many vertices it
+    is optimal, and the improvers are skipped: ``c14``...``c18`` are then that set. The caller is
+    responsible for the bound being correct. With ``None`` the improvers always run and the
+    result is the same as without the argument.
     """
     G = _clean_graph(graph)
     if G.number_of_nodes() == 0:
@@ -490,7 +516,9 @@ def final_candidates(
         c = comp[v]
         comp_n[c] = comp_n.get(c, 0) + 1
         comp_d[c] = max(comp_d.get(c, 0), len(adj[v]))
-    lower_bound = sum(-(-comp_n[c] // (comp_d[c] + 1)) for c in comp_n)
+    certified_bound = sum(-(-comp_n[c] // (comp_d[c] + 1)) for c in comp_n)
+    given_bound = lower_bound
+    lower_bound = certified_bound if given_bound is None else max(certified_bound, given_bound)
     # Size-scaled work floors: min(floor, c (n + m)^2) -- still constants, so the running time
     # stays linear, but a small graph no longer pays for millions of units of work.
     nm = n + sum(len(a) for a in adj) // 2
@@ -513,7 +541,21 @@ def final_candidates(
     split_info: dict = {}
     cands["c13"] = degree_split.degree_split_ids(adj, split_info)
 
-    # ---- Improvers ----
+    # ---- Improvers (skipped when a base strategy already reaches the lower bound) ----
+    early = given_bound is not None and sum(_best(cands)) <= lower_bound
+    if early:
+        reached = list(_best(cands))
+        for name in ("c14", "c15", "c16", "c17"):
+            cands[name] = reached
+        return _finish(G, nodes, cands, reached, {name: reached for name in cands}, return_refined, info, {
+            "components": len(is_bip), "lower_bound": lower_bound, "early_exit": True,
+            "bipartite_components": sum(is_bip), "is_bipartite": all(is_bip),
+            "c1_iterations": tree_info["iterations"], "c1_exhausted": tree_info["exhausted"],
+            "c1_find_steps": tree_info["find_steps"],
+            **{f"c9_{k}": v for k, v in layer_info.items()}, "c10_exact": c10_exact,
+            **{f"c11_{k}": v for k, v in c11_info.items()},
+            **{f"c13_{k}": v for k, v in split_info.items()},
+        })
     votes = [0] * n
     for k in C13_INPUT_NAMES:
         for v in _members(cands[k]):
@@ -556,6 +598,27 @@ def final_candidates(
     if sum(final) > sum(top):
         final = top
 
+    return _finish(G, nodes, cands, final, refined, return_refined, info, {
+        "components": ncomp,
+        "lower_bound": lower_bound,
+        "early_exit": False,
+        "bipartite_components": sum(is_bip),
+        "is_bipartite": all(is_bip),
+        "c1_iterations": tree_info["iterations"],
+        "c1_exhausted": tree_info["exhausted"],
+        "c1_find_steps": tree_info["find_steps"],
+        **{f"c9_{k}": v for k, v in layer_info.items()},
+        "c10_exact": c10_exact,
+        **{f"c11_{k}": v for k, v in c11_info.items()},
+        **{f"c13_{k}": v for k, v in split_info.items()},
+        **{f"c17_{k}": v for k, v in cons_info.items()},
+    })
+
+
+def _finish(G: nx.Graph, nodes: List[Any], cands: Dict[str, List[bool]], final: List[bool],
+            refined: Dict[str, List[bool]], return_refined: bool, info: Optional[dict], stats: dict):
+    """Vertex sets of the candidates and of the final solution, each verified to be an
+    independent dominating set of ``G``; ``info`` receives ``stats``."""
     def to_set(in_s: List[bool]) -> Set[Any]:
         return {nodes[v] for v in _members(in_s)}
 
@@ -565,19 +628,7 @@ def final_candidates(
         if not verify_independent_dominating_set(G, S):
             raise RuntimeError(f"internal error: candidate {name} is not an independent dominating set")
     if info is not None:
-        info.update({
-            "components": ncomp,
-            "lower_bound": lower_bound,
-            "bipartite_components": sum(is_bip),
-            "is_bipartite": all(is_bip),
-            "c1_iterations": tree_info["iterations"],
-            "c1_exhausted": tree_info["exhausted"],
-            **{f"c9_{k}": v for k, v in layer_info.items()},
-            "c10_exact": c10_exact,
-            **{f"c11_{k}": v for k, v in c11_info.items()},
-            **{f"c13_{k}": v for k, v in split_info.items()},
-            **{f"c17_{k}": v for k, v in cons_info.items()},
-        })
+        info.update(stats)
     if return_refined:
         ref_sets = {name: to_set(in_s) for name, in_s in refined.items()}
         ref_sets[FINAL_NAME] = out[FINAL_NAME]
@@ -585,14 +636,18 @@ def final_candidates(
     return out
 
 
-def find_independent_dominating_set(graph: nx.Graph) -> Set[Any]:
+def find_independent_dominating_set(graph: nx.Graph, lower_bound: Optional[int] = None) -> Set[Any]:
     """
-    Approximate MIDS with the Siriaisa 0.0.8 ensemble (``c18``, the smallest refined
-    candidate), in ``O((n + m) alpha(n))`` time.
+    Approximate MIDS with the Siriaisa 0.0.9 ensemble (``c18``, the smallest refined
+    candidate), in ``O(n + m)`` time.
+
+    ``lower_bound`` (optional) is a lower bound on the minimum known to the caller: when a base
+    strategy reaches it, that set is optimal and is returned without running the improvers (see
+    :func:`final_candidates`).
 
     Returns a set that is always independent and dominating in ``graph``.
     """
-    return final_candidates(graph)[FINAL_NAME]
+    return final_candidates(graph, lower_bound=lower_bound)[FINAL_NAME]
 
 
 # ---------------------------------------------------------------------------

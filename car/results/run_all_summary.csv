@@ -1,0 +1,8 @@
+script,status,exit_code,seconds,log
+run_car,ok,0,8.191,results\run_all\run_car.log
+car_bounded,ok,0,1580.497,results\run_all\car_bounded.log
+car_bipartite,ok,0,1848.302,results\run_all\car_bipartite.log
+car_circle,ok,0,284.965,results\run_all\car_circle.log
+car_cubic,ok,0,565.173,results\run_all\car_cubic.log
+car_split,ok,0,1574.703,results\run_all\car_split.log
+car_ugc,ok,0,1655.377,results\run_all\car_ugc.log

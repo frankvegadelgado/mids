@@ -17,8 +17,11 @@ on every instance,
   |S_H|, |S_0|, whether S_0 is independent in G, and the repaired size;
 * c13 and the output c18 of final_candidates;
 * the reference: the certified lower bound LB = sum ceil(n_C / (Delta_C + 1)) and,
-  for n <= --ip-max-n, the MIDS integer program (HiGHS, --ip-time) giving i(G) or an
-  interval [L, U]; the inequality |S_0| <= k (U + s(G)) is checked (it holds for
+  on a complete multipartite graph (the complete, complete bipartite and complete
+  multipartite families), the exact value i(G) = size of the smallest part (every
+  maximal independent set is a whole part), and otherwise, for n <= --ip-max-n, the
+  MIDS integer program (HiGHS, --ip-time) giving i(G) or an interval [L, U]; the
+  inequality |S_0| <= k (U + s(G)) is checked (it holds for
   every upper bound U >= i(G)).
 
 Families. NP-hard or UGC-hard families (the source of the hardness is the label):
@@ -214,6 +217,31 @@ def lower_bound(G: nx.Graph) -> int:
     return total
 
 
+def complete_multipartite_optimum(G: nx.Graph) -> int | None:
+    """i(G) when G is complete multipartite, otherwise None.
+
+    G is complete multipartite exactly when its complement is a disjoint union of cliques; the parts are the
+    components of the complement. Every vertex is adjacent to all the vertices outside its part, so an independent
+    set lies inside one part, and a maximal one is a whole part: i(G) is the size of the smallest part. The
+    complement is not built: a part is the set of the non-neighbours of a vertex together with the vertex."""
+    n = G.number_of_nodes()
+    if n == 0:
+        return None
+    nodes = set(G.nodes())
+    seen: set = set()
+    sizes = []
+    for v in G.nodes():
+        if v in seen:
+            continue
+        part = nodes - set(G.adj[v])
+        for u in part:  # every vertex of the part has exactly the vertices outside the part as neighbours
+            if G.degree(u) != n - len(part) or any(w in part for w in G.adj[u]):
+                return None
+        seen |= part
+        sizes.append(len(part))
+    return min(sizes)
+
+
 def run_instance(name: str, family: str, source: str, G: nx.Graph, args) -> dict:
     G = nx.convert_node_labels_to_integers(G)
     G.remove_edges_from(nx.selfloop_edges(G))
@@ -267,7 +295,10 @@ def run_instance(name: str, family: str, source: str, G: nx.Graph, args) -> dict
 
     LB = lower_bound(G)
     ref = {"status": "not run", "value": None, "lower": LB, "seconds": 0.0}
-    if n <= args.ip_max_n:
+    closed = complete_multipartite_optimum(G) if family.startswith("complete") else None
+    if closed is not None:
+        ref = {"status": "closed form (complete multipartite)", "value": closed, "lower": closed, "seconds": 0.0}
+    elif n <= args.ip_max_n:
         ref = cb.mids_milp(G, args.ip_time)
         ref["lower"] = max(ref["lower"], LB)
     lower = ref["lower"]
